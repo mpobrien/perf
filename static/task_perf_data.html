@@ -1,0 +1,79 @@
+<span ng-controller="PerfController">
+<style>
+  .perf-chart-wrapper{
+    display:inline-block;
+  }
+
+  .perf-chart {
+    margin-top:5px;
+    display:inline-block;
+  }
+
+  .perf-table{
+    border: 1px solid #ccc;
+  }
+
+  .perf-table th {
+    text-align:center;
+  }
+  .perf-table td {
+    padding: 3px;
+    text-align:right;
+    border: 1px solid #888;
+  }
+  .perf-table tr.odd{
+    background-color: #eee;
+  }
+  .perf-trendchart svg{
+    padding-left:60px;
+    padding-top:10px;
+  }
+  .bar-highlighted {
+    color: green;
+  }
+
+  .domain{
+    fill: none; 
+    stroke: black; 
+    stroke-width: 1; 
+  }
+
+</style>
+<div class="panel" ng-if="conf.enabled">
+  <div class="panel-heading"><h4>Mongo-Perv</h4><a href="/plugin/json/task/[[task.id]]/">Download raw data (JSON)</a></div>
+  <div class="panel-body">
+    <ul class="nav nav-tabs">
+      <li ng-class="{active:perftab==0}"><a href="#" ng-click="perftab=0">Graph</a></li>
+      <li ng-class="{active:perftab==1}"><a href="#" ng-click="perftab=1">Table</a></li>
+      <li ng-class="{active:perftab==2}"><a href="#" ng-click="perftab=2">Trend</a></li>
+    </ul>
+    <div ng-show="perftab==0">
+      <div class="perf-chart-wrapper" ng-repeat="test in sample.data.results">
+        <span>[[test.name]]</span>
+          <div id="y_axis-{{$index}}" class="y-axis"></div>
+          <div class="perf-chart" id="chart-[[task.id]]-[[$index]]"></div>
+      </div>
+    </div>
+    <div ng-show="perftab==1">
+      <table class="perf-table" >
+        <tr>
+          <th>Test</th>
+          <th ng-repeat="k in getThreadKeys(sample.data.results)">[[k]]</th>
+          <th>Max</th>
+        </tr>
+        <tr ng-repeat="test in sample.data.results" ng-class="{odd:$odd}">
+          <td>[[test.name]]</td>
+          <td ng-repeat="k in getThreadKeys(sample.data.results)">[[test.results[k].ops_per_sec]]</td>
+          <td>[[getMax(test.results)]]</td>
+        </tr>
+      </table>
+    </div>
+    <div ng-show="perftab==2">
+      <div class="perf-trendchart" id="perf-trendchart-[[task.id]]">
+      </div>
+      <span class="perf-display" id="perf-display-[[task.id]]">hey</span>
+
+    </div>
+  </div>
+</div>
+</span>
