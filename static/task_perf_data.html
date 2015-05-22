@@ -37,6 +37,12 @@
     stroke: black; 
     stroke-width: 1; 
   }
+  .comparison-table-header{
+    font-weight:bold;
+    text-align:right;
+    padding-right:10px;
+    margin-right:10px;
+  }
 
 </style>
 <div class="panel" ng-if="conf.enabled">
@@ -69,10 +75,17 @@
       </table>
     </div>
     <div ng-show="perftab==2">
-      <div class="perf-trendchart" id="perf-trendchart-[[task.id]]">
+      <div class="perf-trendchart-wrapper" ng-repeat="k in testSeriesKeys">
+        <div class="perf-trendchart" id="perf-trendchart-[[task.id]]-[[$index]]">
+        </div>
       </div>
-      <span class="perf-display" id="perf-display-[[task.id]]">hey</span>
-
+      <div ng-show="currentSample != null">
+        <table>
+          <tr><td class="comparison-table-header">Task:</td><td>[[currentSample.task_id]]</td></tr>
+          <tr><td class="comparison-table-header">Ops per sec (max):</td><td>[[currentSample.ops_per_sec]]</td></tr>
+          <tr><td class="comparison-table-header">vs. this task:</td><td>[[getCompareDescription(currentSample, sample)]]</td></tr>
+        </table>
+      </div>
     </div>
   </div>
 </div>

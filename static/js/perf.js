@@ -1,13 +1,23 @@
-function PerfController($scope, $window, $http){
+function PerfController($scope, $window, $http, $compile){
   var numericFilter = function(x){
     return !isNaN(parseInt(x))
   }
   $scope.conf = $window.plugins["perf"]
   $scope.task = $window.task_data
+  $scope.currentSample
   $scope.perftab=1
   $scope.getThreadKeys = function(r){
     var keys = _.uniq(_.filter(_.flatten(_.map(r, function(x){ return _.keys(x.results) }), true), numericFilter))
     return keys
+  }
+
+  $scope.getCompareColor =function(){
+    return "black"
+  }
+
+  $scope.getCompareDescription = function(trendSample, taskSample){
+    trendSample
+    return "black"
   }
 
   $scope.getMax = function(r){
@@ -63,11 +73,11 @@ function PerfController($scope, $window, $http){
         row.append($('<td></td>').text(sample[k]))
         tout.append(row)
       }
-      tout.append($('<tr></tr>')
       return tout
     }  
 
-    var testSeriesByName = {}
+    $scope.testSeriesByName = {}
+    $scope.testSeriesKeys = []
     // Populate the trend data
     $http.get("/plugin/json/history/" + $scope.task.id + "/perf")
       .success(function(d){
@@ -76,12 +86,12 @@ function PerfController($scope, $window, $http){
         for (var i = 0; i < d.length; i++) {
           for (var j = 0; j < d[i].data.results.length; j++) {
             var name = d[i].data.results[j].name
-            if (!(name in testSeriesByName)) {
-              testSeriesByName[name] = []
+            if (!(name in $scope.testSeriesByName)) {
+              $scope.testSeriesByName[name] = []
             }
             var rec = d[i].data.results[j]
             var maxops = _.max(_.pluck(_.filter(_.values(rec.results), function(x){return typeof(x)=="object"}), "ops_per_sec"))
-            testSeriesByName[name].push({
+            $scope.testSeriesByName[name].push({
               task_id: d[i].task_id,
               "ops_per_sec": maxops,
               order: d[i].order
@@ -89,22 +99,25 @@ function PerfController($scope, $window, $http){
           }
         }
 
-        for(key in testSeriesByName){
-          testSeriesByName[key] = _.sortBy(testSeriesByName[key], 'order')
+        for(key in $scope.testSeriesByName){
+          $scope.testSeriesByName[key] = _.sortBy($scope.testSeriesByName[key], 'order')
+          $scope.testSeriesKeys.unshift(key)
         }
     
         setTimeout(function(){
-          for(key in testSeriesByName){
-            console.log(testSeriesByName[key])
+          for(var i=0;i<$scope.testSeriesKeys.length;i++){
+            var key = $scope.testSeriesKeys[i]
+            console.log($scope.testSeriesByName[key])
              var w = 400
              var bw = 6
              var h = 100
-             var svg = d3.select("#perf-trendchart-" + $scope.task.id)
+             console.log("putting graph in", "#perf-trendchart-" + $scope.task.id + "-" + key)
+             var svg = d3.select("#perf-trendchart-" + $scope.task.id + "-" + i)
                   .append("svg")
                   .attr('class',"series")
                   .attr("width", 800)
                   .attr("height", h);
-             var series = testSeriesByName[key]
+             var series = $scope.testSeriesByName[key]
              var ops = _.pluck(series, 'ops_per_sec')
 
             var y = d3.scale.linear()
@@ -113,7 +126,6 @@ function PerfController($scope, $window, $http){
             var x = d3.scale.linear()
               .domain([0, ops.length-1])
               .range([0, w]);
-
 
              svg.selectAll('rect')
                .data(series)
@@ -131,12 +143,13 @@ function PerfController($scope, $window, $http){
                  .attr('width',bw)
                  .attr('height', function(d){return y(0) - y(d.ops_per_sec)})//function(d){(d.ops_per_sec/(maxOps-minOps))*100})
                  .on('mouseover', function(d) {
+                    if($scope.currentSample != null && $scope.currentSample._svgel != null){
+                      d3.select($scope.currentSample._svgel).attr('fill',"#eee")
+                    }
                     d3.select(this).attr('fill',"lightblue")
-                    $('#perf-display-' + $scope.task.id).html(generateSummary(d))
-                 })
-                 .on('mouseout', function(d) {
-                    d3.select(this).attr('fill',"#eee")
-                    $('#perf-display-' + $scope.task.id).html(generateSummary(d))
+                    $scope.currentSample = d
+                    $scope.currentSample._svgel = this
+                    $scope.$apply()
                  })
 
                  var avgOpsPerSec = d3.mean(ops)
@@ -161,8 +174,6 @@ function PerfController($scope, $window, $http){
                 .attr("class", "axis")
                 //.attr("transform", "translate(" + padding + ",0)")
                 .call(yAxis);
-
-            break
           }
         })
       })
