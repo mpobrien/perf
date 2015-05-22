@@ -43,6 +43,9 @@
     padding-right:10px;
     margin-right:10px;
   }
+  .chart-testname{
+    font-size:.8em;
+  }
 
 </style>
 <div class="panel" ng-if="conf.enabled">
@@ -54,8 +57,8 @@
       <li ng-class="{active:perftab==2}"><a href="#" ng-click="perftab=2">Trend</a></li>
     </ul>
     <div ng-show="perftab==0">
-      <div class="perf-chart-wrapper" ng-repeat="test in sample.data.results">
-        <span>[[test.name]]</span>
+      <div class="perf-chart-wrapper col-lg-3" ng-repeat="test in sample.data.results">
+        <span class="chart-testname">[[test.name]]</span>
           <div id="y_axis-{{$index}}" class="y-axis"></div>
           <div class="perf-chart" id="chart-[[task.id]]-[[$index]]"></div>
       </div>
