@@ -79,6 +79,7 @@
     </div>
     <div ng-show="perftab==2">
       <div class="perf-trendchart-wrapper" ng-repeat="k in testSeriesKeys">
+        <span class="chart-testname">[[k]]</span>
         <div class="perf-trendchart" id="perf-trendchart-[[task.id]]-[[$index]]">
         </div>
       </div>

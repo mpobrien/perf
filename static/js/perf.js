@@ -17,7 +17,7 @@ function PerfController($scope, $window, $http, $compile){
 
   $scope.getCompareDescription = function(trendSample, taskSample){
     trendSample
-    return "black"
+    return ""
   }
 
   $scope.getMax = function(r){
@@ -31,7 +31,7 @@ function PerfController($scope, $window, $http, $compile){
       .success(function(d){
         $scope.sample = d
         var w = 700
-        var bw = 3
+        var bw = 1
         var h = 100
         setTimeout(function(){
           for(var i=0;i<$scope.sample.data.results.length;i++){
@@ -109,7 +109,7 @@ function PerfController($scope, $window, $http, $compile){
             var key = $scope.testSeriesKeys[i]
             console.log($scope.testSeriesByName[key])
              var w = 400
-             var bw = 6
+             var bw = 3
              var h = 100
              console.log("putting graph in", "#perf-trendchart-" + $scope.task.id + "-" + key)
              var svg = d3.select("#perf-trendchart-" + $scope.task.id + "-" + i)
