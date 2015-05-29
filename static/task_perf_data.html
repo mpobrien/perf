@@ -15,6 +15,8 @@
 
   .perf-table th {
     text-align:center;
+    padding-left:10px;
+    padding-right:10px;
   }
   .perf-table td {
     padding: 3px;
@@ -51,11 +53,14 @@
 <div class="panel" ng-if="conf.enabled">
   <div class="panel-heading"><h4>Mongo-Perv</h4><a href="/plugin/json/task/[[task.id]]/">Download raw data (JSON)</a></div>
   <div class="panel-body">
+
     <ul class="nav nav-tabs">
       <li ng-class="{active:perftab==0}"><a href="#" ng-click="perftab=0">Graph</a></li>
       <li ng-class="{active:perftab==1}"><a href="#" ng-click="perftab=1">Table</a></li>
       <li ng-class="{active:perftab==2}"><a href="#" ng-click="perftab=2">Trend</a></li>
+      <li></li>
     </ul>
+    <div>Compare to commit: <input type="text" placeholder="githash" ng-model="compareHash"><button ng-click="updateComparison(compareHash)">Update</button></div>
     <div ng-show="perftab==0">
       <div class="perf-chart-wrapper col-lg-3" ng-repeat="test in sample.data.results">
         <span class="chart-testname">[[test.name]]</span>
@@ -64,16 +69,20 @@
       </div>
     </div>
     <div ng-show="perftab==1">
-      <table class="perf-table" >
+      <table class="perf-table">
         <tr>
           <th>Test</th>
           <th ng-repeat="k in getThreadKeys(sample.data.results)">[[k]]</th>
           <th>Max</th>
+          <th ng-show="!!compareSample">max @[[compareSample.revision]]</th>
+          <th ng-show="!!compareSample">vs. [[compareSample.revision]]</th>
         </tr>
         <tr ng-repeat="test in sample.data.results" ng-class="{odd:$odd}">
           <td>[[test.name]]</td>
-          <td ng-repeat="k in getThreadKeys(sample.data.results)">[[test.results[k].ops_per_sec]]</td>
-          <td>[[getMax(test.results)]]</td>
+          <td ng-repeat="k in getThreadKeys(sample.data.results)">[[test.results[k].ops_per_sec | number:0]]</td>
+          <td>[[getMax(test.results) | number:0]]</td>
+          <td ng-show="!!compareSample">[[getSampleComparison(test.name) | number:0]]</td>
+          <td ng-show="!!compareSample">[[100*((getSampleComparison(test.name)-getMax(test.results))/getSampleComparison(test.name)) | number:2]]%</td>
         </tr>
       </table>
     </div>
