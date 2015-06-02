@@ -70,10 +70,12 @@ function PerfController($scope, $window, $http, $compile){
       var graph = new Rickshaw.Graph( {
         element: document.querySelector("#chart-" + $scope.task.id + "-" + i), 
           width: 150, 
-          height: 50, 
+          height: 80, 
           renderer:"bar",
           stack:false,
           series: series,
+          padding: {top: 0.2, left: 0.1, right: 0.1, bottom: 0.1},
+
       })
 
       var yAxis = new Rickshaw.Graph.Axis.Y({ graph: graph, ticks:2 });
@@ -91,11 +93,9 @@ function PerfController($scope, $window, $http, $compile){
     for(var i=0;i<testKeys.length;i++){
       $("#perf-trendchart-" + taskId + "-" + i).empty()
       var key = testKeys[i]
-        console.log(testsByName[key])
         var w = 400
         var bw = 3
         var h = 100
-        console.log("putting graph in", "#perf-trendchart-" + taskId + "-" + key)
         var svg = d3.select("#perf-trendchart-" + taskId + "-" + i)
         .append("svg")
         .attr('class',"series")
@@ -168,7 +168,6 @@ function PerfController($scope, $window, $http, $compile){
 
   $scope.updateComparison = function(x){
     $scope.compareHash = x
-      console.log($scope.task)
     $http.get("/plugin/json/commit/" + $scope.project + "/" + $scope.compareHash + "/" + $scope.task.build_variant).success(function(d){
       $scope.compareSample = d
       drawDetailGraph($scope.sample, $scope.compareSample)
