@@ -50,7 +50,7 @@
   }
 
 </style>
-<div class="panel" ng-if="conf.enabled">
+<div class="panel" ng-if="conf.enabled && task.status == 'success' && !!sample">
   <div class="panel-heading"><h4>Mongo-Perv</h4><a href="/plugin/json/task/[[task.id]]/">Download raw data (JSON)</a></div>
   <div class="panel-body">
 
@@ -74,8 +74,8 @@
           <th>Test</th>
           <th ng-repeat="k in getThreadKeys(sample.data.results)">[[k]]</th>
           <th>Max</th>
-          <th ng-show="!!compareSample">max @[[compareSample.revision]]</th>
-          <th ng-show="!!compareSample">vs. [[compareSample.revision]]</th>
+          <th ng-show="!!compareSample">max @[[compareSample.revision | limitTo:5]]</th>
+          <th ng-show="!!compareSample">vs. [[compareSample.revision | limitTo:5]]</th>
         </tr>
         <tr ng-repeat="test in sample.data.results" ng-class="{odd:$odd}">
           <td>[[test.name]]</td>
