@@ -1,10 +1,4 @@
 function PerfController($scope, $window, $http, $compile){
-  var percentColors = [
-      {pct:0.0,color:{r:0xff,g:0x00,b:0}},
-      {pct:0.5,color:{r:0xff,g:0xff,b:0}},
-      {pct:1.0,color:{r:0x00,g:0xff,b:0}}];
-
-
   var numericFilter = function(x){
     return !isNaN(parseInt(x))
   }
@@ -20,8 +14,31 @@ function PerfController($scope, $window, $http, $compile){
  $scope.compareHash = ""
  $scope.compareSample = null
 
-  $scope.getCompareColor =function(){
-    return "black"
+  $scope.percentToColor = function(percent) {
+    var percentColorRanges = [
+      {min:-Infinity, max:-15, color: "#FF0000"},
+      {min:-15, max:-10,       color: "#FF5500"},
+      {min:-10, max:-5,        color: "#FFAA00"},
+      {min:-5, max:-2.5,       color: "#FEFF00"},
+      {min:-2.5, max:5,        color: "#A9FF00"},
+      {min:5, max:10,          color: "#54FF00"},
+      {min:10, max:+Infinity,  color: "#00FF00"}
+    ]
+
+    for(var i=0;i<percentColorRanges.length;i++){
+      if(percent>percentColorRanges[i].min && percent<=percentColorRanges[i].max){
+        return percentColorRanges[i].color
+      }
+    }
+    return ""
+  }
+
+  $scope.getPctDiff = function(referenceOps, sample, testKey){
+    if(sample == null) return;
+    var compareTest = _.find(sample.data.results, function(x){return x.name == testKey})
+    var compareMaxOps = $scope.getMax(compareTest.results)
+    var pctDiff = (referenceOps-compareMaxOps)/referenceOps
+    return pctDiff
   }
 
   $scope.getCompareDescription = function(trendSample, taskSample){
@@ -166,6 +183,16 @@ function PerfController($scope, $window, $http, $compile){
     }
   }
 
+  $scope.getSampleAtCommit = function(series, commit) {
+    return _.find(series, function(x){return x.revision == commit})
+  }
+
+  $scope.getCommits = function(seriesByName){
+    // get a unique list of all the revisions in the test series, accounting for gaps where some tests might have no data,
+    // in order of push time.
+    return _.uniq(_.pluck(_.sortBy(_.flatten(_.values(seriesByName)), "order"), "revision"), true)
+  }
+
   $scope.updateComparison = function(x){
     $scope.compareHash = x
     $http.get("/plugin/json/commit/" + $scope.project + "/" + $scope.compareHash + "/" + $scope.task.build_variant).success(function(d){
@@ -213,6 +240,7 @@ function PerfController($scope, $window, $http, $compile){
             var rec = d[i].data.results[j]
             var maxops = _.max(_.pluck(_.filter(_.values(rec.results), function(x){return typeof(x)=="object"}), "ops_per_sec"))
             $scope.testSeriesByName[name].push({
+              revision: d[i].revision,
               task_id: d[i].task_id,
               "ops_per_sec": maxops,
               order: d[i].order

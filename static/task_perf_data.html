@@ -48,7 +48,12 @@
   .chart-testname{
     font-size:.8em;
   }
-
+  .sample-cell {
+    font-size:.7em;
+  }
+  .compare-input{
+    padding:15px;
+  }
 </style>
 <div class="panel" ng-if="conf.enabled && task.status == 'success' && !!sample">
   <div class="panel-heading"><h4>Mongo-Perv</h4><a href="/plugin/json/task/[[task.id]]/">Download raw data (JSON)</a></div>
@@ -58,9 +63,9 @@
       <li ng-class="{active:perftab==0}"><a href="#" ng-click="perftab=0">Graph</a></li>
       <li ng-class="{active:perftab==1}"><a href="#" ng-click="perftab=1">Table</a></li>
       <li ng-class="{active:perftab==2}"><a href="#" ng-click="perftab=2">Trend</a></li>
-      <li></li>
+      <li ng-class="{active:perftab==3}"><a href="#" ng-click="perftab=3">Trend Table</a></li>
     </ul>
-    <div>Compare to commit: <input type="text" placeholder="githash" ng-model="compareHash"><button ng-click="updateComparison(compareHash)">Update</button></div>
+    <div class="compare-input">Compare to commit: <input type="text" placeholder="githash" ng-model="compareHash"><button ng-click="updateComparison(compareHash)" class="btn btn-primary btn-small">Update</button></div>
     <div ng-show="perftab==0">
       <div class="perf-chart-wrapper col-lg-3" ng-repeat="test in sample.data.results">
         <span class="chart-testname">[[test.name]]</span>
@@ -99,6 +104,23 @@
           <tr><td class="comparison-table-header">vs. this task:</td><td>[[getCompareDescription(currentSample, sample)]]</td></tr>
         </table>
       </div>
+    </div>
+    <div ng-show="perftab==3" style="overflow-x:scroll">
+      <table class="perf-table">
+        <tr>
+          <th>Test</th>
+          <td ng-repeat="c in getCommits(testSeriesByName)">
+            [[c | limitTo:4 ]]
+          </td>
+        </tr>
+        <tr ng-repeat="k in testSeriesKeys">
+          <td>[[k]]</td>
+          <td ng-repeat="c in getCommits(testSeriesByName)" class="sample-cell" ng-show="!compareSample">[[getSampleAtCommit(testSeriesByName[k], c).ops_per_sec | number:0]]</td>
+          <td ng-repeat="c in getCommits(testSeriesByName)" class="sample-cell" ng-show="!!compareSample" ng-style="{backgroundColor:percentToColor(getPctDiff(getSampleAtCommit(testSeriesByName[k], c).ops_per_sec, compareSample, k))}">
+            [[getPctDiff(getSampleAtCommit(testSeriesByName[k], c).ops_per_sec, compareSample, k) | number:1]]%
+          </td>
+        </tr>
+      </table>
     </div>
   </div>
 </div>
