@@ -54,6 +54,9 @@
   .compare-input{
     padding:15px;
   }
+  .mono {
+    font-family:monospace;
+  }
 </style>
 <div class="panel" ng-if="conf.enabled && task.status == 'success' && !!sample">
   <div class="panel-heading"><h4>Mongo-Perv</h4><a href="/plugin/json/task/[[task.id]]/">Download raw data (JSON)</a></div>
@@ -79,8 +82,8 @@
           <th>Test</th>
           <th ng-repeat="k in getThreadKeys(sample.data.results)">[[k]]</th>
           <th>Max</th>
-          <th ng-show="!!compareSample">max @[[compareSample.revision | limitTo:5]]</th>
-          <th ng-show="!!compareSample">vs. [[compareSample.revision | limitTo:5]]</th>
+          <th ng-show="!!compareSample">max @<span class="mono">[[compareSample.revision | limitTo:5]]</span></th>
+          <th ng-show="!!compareSample">vs. <span class="mono">[[compareSample.revision | limitTo:5]]</span></th>
         </tr>
         <tr ng-repeat="test in sample.data.results" ng-class="{odd:$odd}">
           <td>[[test.name]]</td>
@@ -109,7 +112,7 @@
       <table class="perf-table">
         <tr>
           <th>Test</th>
-          <td ng-repeat="c in getCommits(testSeriesByName)">
+          <td ng-repeat="c in getCommits(testSeriesByName)" class="mono">
             [[c | limitTo:4 ]]
           </td>
         </tr>
@@ -117,7 +120,7 @@
           <td>[[k]]</td>
           <td ng-repeat="c in getCommits(testSeriesByName)" class="sample-cell" ng-show="!compareSample">[[getSampleAtCommit(testSeriesByName[k], c).ops_per_sec | number:0]]</td>
           <td ng-repeat="c in getCommits(testSeriesByName)" class="sample-cell" ng-show="!!compareSample" ng-style="{backgroundColor:percentToColor(getPctDiff(getSampleAtCommit(testSeriesByName[k], c).ops_per_sec, compareSample, k))}">
-            [[getPctDiff(getSampleAtCommit(testSeriesByName[k], c).ops_per_sec, compareSample, k) | number:1]]%
+            [[getPctDiff(getSampleAtCommit(testSeriesByName[k], c).ops_per_sec, compareSample, k) | number:1]]
           </td>
         </tr>
       </table>

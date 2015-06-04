@@ -34,7 +34,7 @@ function PerfController($scope, $window, $http, $compile){
   }
 
   $scope.getPctDiff = function(referenceOps, sample, testKey){
-    if(sample == null) return;
+    if(sample == null) return "";
     var compareTest = _.find(sample.data.results, function(x){return x.name == testKey})
     var compareMaxOps = $scope.getMax(compareTest.results)
     var pctDiff = (referenceOps-compareMaxOps)/referenceOps
