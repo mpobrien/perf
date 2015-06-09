@@ -61,6 +61,7 @@ var numericFilter = function(x){
 function PerfController($scope, $window, $http, $sce){
   
   $scope.templateurl = $sce.getTrustedResourceUrl("https://gist.githubusercontent.com/mpobrien/653f3c1413eb082a6eb5/raw/6cf6a0c69370288f6622893580ec95eddd866c58/gistfile1.html")
+    console.log($scope.templateurl)
   $scope.conf = $window.plugins["perf"]
   $scope.task = $window.task_data
   $scope.currentSample
