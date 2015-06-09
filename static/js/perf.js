@@ -4,6 +4,8 @@
 //getCommits
 //
 //
+//
+console.log("debug perf!")
 /*
 {
   "name": "perf",
