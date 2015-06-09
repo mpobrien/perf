@@ -264,6 +264,11 @@ function PerfController($scope, $window, $http){
         $scope.trendSamples = new TrendSamples(d)
         setTimeout(function(){drawTrendGraph($scope.trendSamples, $scope.task.id, null)},0)
       })
+
+    if($scope.task.patch_info && $scope.task.patch_info.Patch.Githash){
+      //pre-populate comparison vs. base commit of patch.
+      $scope.updateComparison($scope.task.patch_info.Patch.Githash)
+    }
   }
 }
 
