@@ -56,7 +56,7 @@ var numericFilter = function(x){
   return !isNaN(parseInt(x))
 }
 
-function PerfController($scope, $window, $http, $compile){
+function PerfController($scope, $window, $http){
   $scope.conf = $window.plugins["perf"]
   $scope.task = $window.task_data
   $scope.currentSample
@@ -238,7 +238,7 @@ function PerfController($scope, $window, $http, $compile){
 
   if($scope.conf.enabled){
     // Populate the graph and table for this task
-    $http.get("/plugin/json/task/" + $scope.task.id + "/")
+    $http.get("/plugin/json/task/" + $scope.task.id + "/perf/")
       .success(function(d){
         $scope.perfSample = new TestSample(d)
         var w = 700
