@@ -1,7 +1,62 @@
+//getMax
+//getPctDiff
+//getSampleComparison
+//getCommits
+//
+//
+/*
+{
+  "name": "perf",
+  "project_id": "sample",
+  "task_id": "sample_osx_108_compile_3585388b1591dfca47ac26a5b9a564ec8f138a5e_15_05_18_13_04_08",
+  "build_id": "sample_osx_108_3585388b1591dfca47ac26a5b9a564ec8f138a5e_15_05_18_13_04_08",
+  "variant": "osx-108",
+  "version_id": "sample_3585388b1591dfca47ac26a5b9a564ec8f138a5e",
+  "order": 4,
+  "revision": "",
+  "data": {
+    "end": "2015-05-18T19:37:33.223Z",
+    "errors": [],
+    "results": [
+      {
+        "name": "Queries.v1.Empty",
+        "results": {
+          "1": {
+            "elapsed_secs": 5,
+            "end": "2015-05-18T19:37:26.665Z",
+            "median": 1545.1083465241359,
+            "n": 1,
+            "ops_per_sec": 1366.1112803965807,
+            "ops_per_sec_values": [
+              1545.1083465241359
+            ],
+            "standardDeviation": 0,
+            "start": "2015-05-18T19:37:20.086Z"
+          },
+          "2": {
+            "elapsed_secs": 5,
+            "end": "2015-05-18T19:37:33.223Z",
+            "median": 2077.330938674048,
+            "n": 1,
+            "ops_per_sec": 840.9516578540206,
+            "ops_per_sec_values": [
+              2077.330938674048
+            ],
+            "standardDeviation": 0,
+            "start": "2015-05-18T19:37:26.665Z"
+          },
+          "end": "2015-05-18T19:37:33.223Z",
+          "start": "2015-05-18T19:37:20.086Z"
+        }
+      },
+...
+*/
+
+var numericFilter = function(x){
+  return !isNaN(parseInt(x))
+}
+
 function PerfController($scope, $window, $http, $compile){
-  var numericFilter = function(x){
-    return !isNaN(parseInt(x))
-  }
   $scope.conf = $window.plugins["perf"]
   $scope.task = $window.task_data
   $scope.currentSample
@@ -12,18 +67,19 @@ function PerfController($scope, $window, $http, $compile){
     return keys
   }
  $scope.compareHash = ""
- $scope.compareSample = null
+ $scope.comparePerfSample = null
 
-  $scope.percentToColor = function(percent) {
-    var percentColorRanges = [
-      {min:-Infinity, max:-15, color: "#FF0000"},
-      {min:-15, max:-10,       color: "#FF5500"},
-      {min:-10, max:-5,        color: "#FFAA00"},
-      {min:-5, max:-2.5,       color: "#FEFF00"},
-      {min:-2.5, max:5,        color: "#A9FF00"},
-      {min:5, max:10,          color: "#54FF00"},
-      {min:10, max:+Infinity,  color: "#00FF00"}
-    ]
+ // convert a percentage to a color. Higher -> greener, Lower -> redder.
+ $scope.percentToColor = function(percent) {
+   var percentColorRanges = [
+     {min:-Infinity, max:-15, color: "#FF0000"},
+     {min:-15, max:-10,       color: "#FF5500"},
+     {min:-10, max:-5,        color: "#FFAA00"},
+     {min:-5, max:-2.5,       color: "#FEFF00"},
+     {min:-2.5, max:5,        color: "#A9FF00"},
+     {min:5, max:10,          color: "#54FF00"},
+     {min:10, max:+Infinity,  color: "#00FF00"}
+   ]
 
     for(var i=0;i<percentColorRanges.length;i++){
       if(percent>percentColorRanges[i].min && percent<=percentColorRanges[i].max){
@@ -31,6 +87,10 @@ function PerfController($scope, $window, $http, $compile){
       }
     }
     return ""
+  }
+
+  $scope.percentDiff = function(val1, val2){
+    return (val1 - val2)/val1
   }
 
   $scope.getPctDiff = function(referenceOps, sample, testKey){
@@ -41,51 +101,25 @@ function PerfController($scope, $window, $http, $compile){
     return pctDiff
   }
 
-  $scope.getCompareDescription = function(trendSample, taskSample){
-    trendSample
-    return ""
-  }
-
-  $scope.getSampleComparison = function(testname, thread){
-    if($scope.compareSample == null)
-      return
-    testData = _.find($scope.compareSample.data.results, function(x){return x.name == testname})
-    if(testData){
-      return $scope.getMax(testData.results)
-    }
-  }
-
   $scope.getMax = function(r){
     return _.max(_.filter(_.pluck(_.values(r), 'ops_per_sec'), numericFilter))
   }
 
   var drawDetailGraph = function(sample1, sample2){
-    for(var i=0;i<sample1.data.results.length;i++){
+    var testNames = sample1.testNames()
+    for(var i=0;i<testNames.length;i++){
+      var testName = testNames[i]
       $("#chart-" + $scope.task.id + "-" + i).empty()
-      var testname = sample1.data.results[i].name
-      var series = sample1.data.results[i].results
-      var keys = _.filter(_.keys(sample1.data.results[i].results), numericFilter)
-      var threadsVsOps = []
-      for(var j=0;j<keys.length;j++){
-        threadsVsOps.push({x:j, y:sample1.data.results[i].results[keys[j]].ops_per_sec})
-      }
 
-      var series = [{ color: 'lightblue', data: threadsVsOps}]
+      var testname = testNames[i]
+      var series = [{ color: 'lightblue', data: sample1.threadsVsOps(testName)}]
       if(!!sample2){
-        var compareTest = _.find(sample2.data.results, function(x){return x.name == testname})
-        if(compareTest && compareTest.results){
-          var compareSeries = compareTest.series
-          var compareKeys = _.filter(_.keys(sample2.data.results[i].results), numericFilter)
-          var sample2ops = []
-          for(var j=0;j<compareKeys.length;j++){
-            sample2ops.push({x:j, y:sample2.data.results[i].results[keys[j]].ops_per_sec})
-          }
-        }
-        series.push({ color: 'lightpink', data: sample2ops})
+        series.push({ color: 'lightpink', data: sample2.threadsVsOps(testName)})
       }
 
+      var target = "#chart-" + $scope.task.id + "-" + i
       var graph = new Rickshaw.Graph( {
-        element: document.querySelector("#chart-" + $scope.task.id + "-" + i), 
+        element: document.querySelector(target), 
           width: 150, 
           height: 80, 
           renderer:"bar",
@@ -99,17 +133,17 @@ function PerfController($scope, $window, $http, $compile){
       var x_axis = new Rickshaw.Graph.Axis.X({ 
         graph: graph, 
         orientation:"top",
-        tickValues:_.map(keys, function(k){return parseInt(k)-.5}), 
+        tickValues:_.map(sample1.threads(), function(k){return parseInt(k)-.5}), 
          tickFormat:function(t){return Math.floor(t)+1}
       })
       graph.render();
     }
   }
 
-  var drawTrendGraph = function(testKeys, testsByName, taskId, compareSample){
-    for(var i=0;i<testKeys.length;i++){
+  var drawTrendGraph = function(trendSamples, taskId, compareSample){
+    for(var i=0;i<trendSamples.testNames.length;i++){
       $("#perf-trendchart-" + taskId + "-" + i).empty()
-      var key = testKeys[i]
+      var key = trendSamples.testNames[i]
         var w = 400
         var bw = 3
         var h = 100
@@ -118,7 +152,7 @@ function PerfController($scope, $window, $http, $compile){
         .attr('class',"series")
         .attr("width", 800)
         .attr("height", h);
-      var series = testsByName[key]
+      var series = trendSamples.seriesByName[key]
         var ops = _.pluck(series, 'ops_per_sec')
 
         var y = d3.scale.linear()
@@ -155,9 +189,8 @@ function PerfController($scope, $window, $http, $compile){
 
         var avgOpsPerSec = d3.mean(ops)
         if(compareSample) {
-          var compareTest = _.find(compareSample.data.results, function(x){return x.name == key})
-          if(compareTest && compareTest.results){
-            var compareMax = $scope.getMax(compareTest.results)
+          compareMax = compareSample.maxThroughputForTest(key)
+          if(!isNaN(compareMax)){
             var compareLine = d3.svg.line()
             .x(function(d, i){return x(i)})
             .y(function(d){ return y(compareMax)})
@@ -178,7 +211,6 @@ function PerfController($scope, $window, $http, $compile){
         .ticks(5);
       svg.append("g")
         .attr("class", "axis")
-        //.attr("transform", "translate(" + padding + ",0)")
         .call(yAxis);
     }
   }
@@ -196,11 +228,11 @@ function PerfController($scope, $window, $http, $compile){
   $scope.updateComparison = function(x){
     $scope.compareHash = x
     $http.get("/plugin/json/commit/" + $scope.project + "/" + $scope.compareHash + "/" + $scope.task.build_variant).success(function(d){
-      $scope.compareSample = d
-      drawDetailGraph($scope.sample, $scope.compareSample)
-      drawTrendGraph($scope.testSeriesKeys, $scope.testSeriesByName, $scope.task.id, $scope.compareSample)
+      $scope.comparePerfSample = new TestSample(d)
+      drawDetailGraph($scope.perfSample, $scope.comparePerfSample)
+      drawTrendGraph($scope.trendSamples, $scope.task.id, $scope.comparePerfSample)
     }).error(function(){
-      $scope.compareSample = null
+      $scope.comparePerfSample = null
     })
   }
 
@@ -208,11 +240,11 @@ function PerfController($scope, $window, $http, $compile){
     // Populate the graph and table for this task
     $http.get("/plugin/json/task/" + $scope.task.id + "/")
       .success(function(d){
-        $scope.sample = d
+        $scope.perfSample = new TestSample(d)
         var w = 700
         var bw = 1
         var h = 100
-        setTimeout(function(){drawDetailGraph($scope.sample)},0)
+        setTimeout(function(){drawDetailGraph($scope.perfSample)},0)
       })
 
     function generateSummary(sample){
@@ -226,35 +258,103 @@ function PerfController($scope, $window, $http, $compile){
       return tout
     }  
 
-    $scope.testSeriesByName = {}
-    $scope.testSeriesKeys = []
     // Populate the trend data
     $http.get("/plugin/json/history/" + $scope.task.id + "/perf")
       .success(function(d){
-        for (var i = 0; i < d.length; i++) {
-          for (var j = 0; j < d[i].data.results.length; j++) {
-            var name = d[i].data.results[j].name
-            if (!(name in $scope.testSeriesByName)) {
-              $scope.testSeriesByName[name] = []
-            }
-            var rec = d[i].data.results[j]
-            var maxops = _.max(_.pluck(_.filter(_.values(rec.results), function(x){return typeof(x)=="object"}), "ops_per_sec"))
-            $scope.testSeriesByName[name].push({
-              revision: d[i].revision,
-              task_id: d[i].task_id,
-              "ops_per_sec": maxops,
-              order: d[i].order
-            })
-          }
-        }
-
-        for(key in $scope.testSeriesByName){
-          $scope.testSeriesByName[key] = _.sortBy($scope.testSeriesByName[key], 'order')
-          $scope.testSeriesKeys.unshift(key)
-        }
-    
-        setTimeout(function(){drawTrendGraph($scope.testSeriesKeys, $scope.testSeriesByName, $scope.task.id, null)},0)
+        $scope.trendSamples = new TrendSamples(d)
+        setTimeout(function(){drawTrendGraph($scope.trendSamples, $scope.task.id, null)},0)
       })
   }
 }
 
+function TrendSamples(samples){
+  this.samples = samples
+  this._sampleByCommitIndexes = {}
+  this.seriesByName = {}
+  this.testNames = []
+  for (var i = 0; i < samples.length; i++) {
+    for (var j = 0; j < samples[i].data.results.length; j++) {
+      var name = samples[i].data.results[j].name
+      if (!(name in this.seriesByName)) {
+        this.seriesByName[name] = []
+      }
+      var rec = samples[i].data.results[j]
+      var maxops = _.max(_.pluck(_.filter(_.values(rec.results), function(x){return typeof(x)=="object"}), "ops_per_sec"))
+      this.seriesByName[name].push({
+        revision: samples[i].revision,
+        task_id: samples[i].task_id,
+        "ops_per_sec": maxops,
+        order: samples[i].order
+      })
+    }
+  }
+
+  for(key in this.seriesByName){
+    this.seriesByName[key] = _.sortBy(this.seriesByName[key], 'order')
+    this.testNames.unshift(key)
+  }
+
+  for(var i=0;i<this.testNames.length;i++){
+    //make an index for commit hash -> sample for each test series
+    var k = this.testNames[i]
+    this._sampleByCommitIndexes[k] = _.groupBy(this.seriesByName[k], "revision"), function(x){return x[0]}
+    for(t in this._sampleByCommitIndexes[k]){
+      this._sampleByCommitIndexes[k][t] = this._sampleByCommitIndexes[k][t][0]
+    }
+  }
+
+  this.commits = function(testName){
+    if(!this._commits){
+      this._commits = _.uniq(_.pluck(_.sortBy(_.flatten(_.values(this.seriesByName)), "order"), "revision"), true)
+    }
+    return this._commits
+  }
+
+  this.sampleInSeriesAtCommit = function(testName, revision){
+    return this._sampleByCommitIndexes[testName][revision]
+  }
+
+}
+
+function TestSample(sample){
+  this.sample = sample
+  this._threads = null
+  this._maxes = {}
+
+  this.threads = function(){
+    if(this._threads == null){
+      this._threads = _.uniq(_.filter(_.flatten(_.map(this.sample.data.results, function(x){ return _.keys(x.results) }), true), numericFilter))
+    }
+    return this._threads
+  }
+
+  this.testNames = function(){
+    return _.pluck(this.sample.data.results, "name") 
+  }
+
+  this.threadsVsOps = function(testName){
+    var testInfo = this.resultForTest(testName)
+    var result = []
+    if(!testInfo)
+      return
+    var series = testInfo.results
+    var keys = _.filter(_.keys(series), numericFilter)
+    for(var j=0;j<keys.length;j++){
+      result.push({x:j, y:series[keys[j]].ops_per_sec})
+    }
+    return result
+  }
+
+  this.resultForTest = function(testName){
+      return _.find(this.sample.data.results, function(x){return x.name == testName})
+  }
+
+  this.maxThroughputForTest = function(testName){
+    if(!_.has(this._maxes, testName)){
+      var d = this.resultForTest(testName)
+      this._maxes[testName] = _.max(_.filter(_.pluck(_.values(d.results), 'ops_per_sec'), numericFilter))
+    }
+    return this._maxes[testName]
+  }
+
+}

@@ -58,7 +58,7 @@
     font-family:monospace;
   }
 </style>
-<div class="panel" ng-if="conf.enabled && task.status == 'success' && !!sample">
+<div class="panel" ng-if="conf.enabled && task.status == 'success' && !!perfSample">
   <div class="panel-heading"><h4>Mongo-Perv</h4><a href="/plugin/json/task/[[task.id]]/">Download raw data (JSON)</a></div>
   <div class="panel-body">
 
@@ -70,8 +70,8 @@
     </ul>
     <div class="compare-input">Compare to commit: <input type="text" placeholder="githash" ng-model="compareHash"><button ng-click="updateComparison(compareHash)" class="btn btn-primary btn-small">Update</button></div>
     <div ng-show="perftab==0">
-      <div class="perf-chart-wrapper col-lg-3" ng-repeat="test in sample.data.results">
-        <span class="chart-testname">[[test.name]]</span>
+      <div class="perf-chart-wrapper col-lg-3" ng-repeat="testName in perfSample.testNames()">
+        <span class="chart-testname">[[testName]]</span>
           <div id="y_axis-{{$index}}" class="y-axis"></div>
           <div class="perf-chart" id="chart-[[task.id]]-[[$index]]"></div>
       </div>
@@ -80,47 +80,51 @@
       <table class="perf-table">
         <tr>
           <th>Test</th>
-          <th ng-repeat="k in getThreadKeys(sample.data.results)">[[k]]</th>
+          <th ng-repeat="k in perfSample.threads()">[[k]]</th>
           <th>Max</th>
-          <th ng-show="!!compareSample">max @<span class="mono">[[compareSample.revision | limitTo:5]]</span></th>
-          <th ng-show="!!compareSample">vs. <span class="mono">[[compareSample.revision | limitTo:5]]</span></th>
+          <th ng-show="!!comparePerfSample">max @<span class="mono">[[comparePerfSample.sample.revision | limitTo:5]]</span></th>
+          <th ng-show="!!comparePerfSample">vs. <span class="mono">[[comparePerfSample.sample.revision | limitTo:5]]</span></th>
         </tr>
-        <tr ng-repeat="test in sample.data.results" ng-class="{odd:$odd}">
-          <td>[[test.name]]</td>
-          <td ng-repeat="k in getThreadKeys(sample.data.results)">[[test.results[k].ops_per_sec | number:0]]</td>
-          <td>[[getMax(test.results) | number:0]]</td>
-          <td ng-show="!!compareSample">[[getSampleComparison(test.name) | number:0]]</td>
-          <td ng-show="!!compareSample">[[100*((getSampleComparison(test.name)-getMax(test.results))/getSampleComparison(test.name)) | number:2]]%</td>
+        <tr ng-repeat="test in perfSample.testNames()" ng-class="{odd:$odd}">
+          <td>[[test]]</td>
+          <td ng-repeat="k in perfSample.threads()">[[perfSample.resultForTest(test).results[k].ops_per_sec | number:0]]</td>
+          <td>[[perfSample.maxThroughputForTest(test) | number:0]]</td>
+          <td ng-show="!!comparePerfSample">[[comparePerfSample.maxThroughputForTest(test) | number:0]]</td>
+          <td ng-show="!!comparePerfSample">[[100*percentDiff(perfSample.maxThroughputForTest(test),comparePerfSample.maxThroughputForTest(test)) | number:2]]%</td>
         </tr>
       </table>
     </div>
     <div ng-show="perftab==2">
-      <div class="perf-trendchart-wrapper" ng-repeat="k in testSeriesKeys">
+      <div class="perf-trendchart-wrapper" ng-repeat="k in trendSamples.testNames">
         <span class="chart-testname">[[k]]</span>
         <div class="perf-trendchart" id="perf-trendchart-[[task.id]]-[[$index]]">
         </div>
       </div>
-      <div ng-show="currentSample != null">
+      <!--<div ng-show="currentSample != null">
         <table>
           <tr><td class="comparison-table-header">Task:</td><td>[[currentSample.task_id]]</td></tr>
           <tr><td class="comparison-table-header">Ops per sec (max):</td><td>[[currentSample.ops_per_sec]]</td></tr>
           <tr><td class="comparison-table-header">vs. this task:</td><td>[[getCompareDescription(currentSample, sample)]]</td></tr>
         </table>
       </div>
+      -->
     </div>
     <div ng-show="perftab==3" style="overflow-x:scroll">
       <table class="perf-table">
         <tr>
           <th>Test</th>
-          <td ng-repeat="c in getCommits(testSeriesByName)" class="mono">
-            [[c | limitTo:4 ]]
+          <td ng-repeat="c in trendSamples.commits()" class="mono">
+            [[c ]]
           </td>
         </tr>
-        <tr ng-repeat="k in testSeriesKeys">
+        <tr ng-repeat="k in trendSamples.testNames">
           <td>[[k]]</td>
-          <td ng-repeat="c in getCommits(testSeriesByName)" class="sample-cell" ng-show="!compareSample">[[getSampleAtCommit(testSeriesByName[k], c).ops_per_sec | number:0]]</td>
-          <td ng-repeat="c in getCommits(testSeriesByName)" class="sample-cell" ng-show="!!compareSample" ng-style="{backgroundColor:percentToColor(getPctDiff(getSampleAtCommit(testSeriesByName[k], c).ops_per_sec, compareSample, k))}">
-            [[getPctDiff(getSampleAtCommit(testSeriesByName[k], c).ops_per_sec, compareSample, k) | number:1]]
+          <td ng-repeat="c in trendSamples.commits()" class="sample-cell" ng-show="!comparePerfSample">
+            [[trendSamples.sampleInSeriesAtCommit(k, c).ops_per_sec | number:0]]
+          </td>
+          <td ng-repeat="c in trendSamples.commits()" class="sample-cell" ng-show="!!comparePerfSample" 
+            ng-style="{backgroundColor:percentToColor(100*percentDiff(trendSamples.sampleInSeriesAtCommit(k,c).ops_per_sec, comparePerfSample.maxThroughputForTest(k)))}">
+            [[100*percentDiff(trendSamples.sampleInSeriesAtCommit(k,c).ops_per_sec, comparePerfSample.maxThroughputForTest(k)) | number:2]]
           </td>
         </tr>
       </table>
