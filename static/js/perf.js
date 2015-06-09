@@ -227,7 +227,7 @@ function PerfController($scope, $window, $http){
 
   $scope.updateComparison = function(x){
     $scope.compareHash = x
-    $http.get("/plugin/json/commit/" + $scope.project + "/" + $scope.compareHash + "/" + $scope.task.build_variant).success(function(d){
+    $http.get("/plugin/json/commit/" + $scope.project + "/" + $scope.compareHash + "/" + $scope.task.build_variant + "/" + $scope.task.display_name + "/perf").success(function(d){
       $scope.comparePerfSample = new TestSample(d)
       drawDetailGraph($scope.perfSample, $scope.comparePerfSample)
       drawTrendGraph($scope.trendSamples, $scope.task.id, $scope.comparePerfSample)
