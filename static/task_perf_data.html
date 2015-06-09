@@ -114,7 +114,7 @@
         <tr>
           <th>Test</th>
           <td ng-repeat="c in trendSamples.commits()" class="mono">
-            [[c ]]
+            [[c | limitTo:5]]
           </td>
         </tr>
         <tr ng-repeat="k in trendSamples.testNames">
