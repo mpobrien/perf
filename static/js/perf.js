@@ -352,6 +352,9 @@ function TestSample(sample){
   this.maxThroughputForTest = function(testName){
     if(!_.has(this._maxes, testName)){
       var d = this.resultForTest(testName)
+      if(!d){
+        return
+      }
       this._maxes[testName] = _.max(_.filter(_.pluck(_.values(d.results), 'ops_per_sec'), numericFilter))
     }
     return this._maxes[testName]
