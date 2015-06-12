@@ -115,7 +115,7 @@
       <table class="perf-table">
         <tr>
           <th>Test</th>
-          <td ng-repeat="c in trendSamples.commits()" class="mono">
+          <td ng-repeat="c in trendSamples.commits() track by $index" class="mono">
             [[c | limitTo:5]]
           </td>
         </tr>
