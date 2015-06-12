@@ -310,7 +310,7 @@ function TrendSamples(samples){
 
   this.commits = function(testName){
     if(!this._commits){
-      this._commits = _.uniq(_.pluck(_.sortBy(_.flatten(_.values(this.seriesByName)), "order"), "revision"), true)
+      this._commits = _.uniq(_.pluck(_.sortBy(_.flatten(_.values(this.seriesByName)), "order"), "revision"), false)
     }
     return this._commits
   }
