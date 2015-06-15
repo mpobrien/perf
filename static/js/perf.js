@@ -1,57 +1,3 @@
-//getMax
-//getPctDiff
-//getSampleComparison
-//getCommits
-//
-//
-/*
-{
-  "name": "perf",
-  "project_id": "sample",
-  "task_id": "sample_osx_108_compile_3585388b1591dfca47ac26a5b9a564ec8f138a5e_15_05_18_13_04_08",
-  "build_id": "sample_osx_108_3585388b1591dfca47ac26a5b9a564ec8f138a5e_15_05_18_13_04_08",
-  "variant": "osx-108",
-  "version_id": "sample_3585388b1591dfca47ac26a5b9a564ec8f138a5e",
-  "order": 4,
-  "revision": "",
-  "data": {
-    "end": "2015-05-18T19:37:33.223Z",
-    "errors": [],
-    "results": [
-      {
-        "name": "Queries.v1.Empty",
-        "results": {
-          "1": {
-            "elapsed_secs": 5,
-            "end": "2015-05-18T19:37:26.665Z",
-            "median": 1545.1083465241359,
-            "n": 1,
-            "ops_per_sec": 1366.1112803965807,
-            "ops_per_sec_values": [
-              1545.1083465241359
-            ],
-            "standardDeviation": 0,
-            "start": "2015-05-18T19:37:20.086Z"
-          },
-          "2": {
-            "elapsed_secs": 5,
-            "end": "2015-05-18T19:37:33.223Z",
-            "median": 2077.330938674048,
-            "n": 1,
-            "ops_per_sec": 840.9516578540206,
-            "ops_per_sec_values": [
-              2077.330938674048
-            ],
-            "standardDeviation": 0,
-            "start": "2015-05-18T19:37:26.665Z"
-          },
-          "end": "2015-05-18T19:37:33.223Z",
-          "start": "2015-05-18T19:37:20.086Z"
-        }
-      },
-...
-*/
-
 var numericFilter = function(x){
   return !isNaN(parseInt(x))
 }
@@ -140,81 +86,6 @@ function PerfController($scope, $window, $http){
     }
   }
 
-  var drawTrendGraph = function(trendSamples, taskId, compareSample){
-    for(var i=0;i<trendSamples.testNames.length;i++){
-      $("#perf-trendchart-" + taskId + "-" + i).empty()
-      var key = trendSamples.testNames[i]
-        var w = 400
-        var bw = 3
-        var h = 100
-        var svg = d3.select("#perf-trendchart-" + taskId + "-" + i)
-        .append("svg")
-        .attr('class',"series")
-        .attr("width", 800)
-        .attr("height", h);
-      var series = trendSamples.seriesByName[key]
-        var ops = _.pluck(series, 'ops_per_sec')
-
-        var y = d3.scale.linear()
-        .domain([0, d3.max(ops)])
-        .range([h, 0]);
-      var x = d3.scale.linear()
-        .domain([0, ops.length-1])
-        .range([0, w]);
-
-      svg.selectAll('rect')
-        .data(series)
-        .enter()
-        .append('rect')
-        .attr('stroke', function(d){
-          if(d.task_id == taskId){
-            return 'green'
-          }
-          return '#ccc'
-        })
-      .attr('fill', '#eee')
-        .attr('x', function(d,i){return x(i)})
-        .attr('y', function(d){return y(d.ops_per_sec)})
-        .attr('width',bw)
-        .attr('height', function(d){return y(0) - y(d.ops_per_sec)})//function(d){(d.ops_per_sec/(maxOps-minOps))*100})
-        .on('mouseover', function(d) {
-          if($scope.currentSample != null && $scope.currentSample._svgel != null){
-            d3.select($scope.currentSample._svgel).attr('fill',"#eee")
-          }
-          d3.select(this).attr('fill',"lightblue")
-          $scope.currentSample = d
-          $scope.currentSample._svgel = this
-          $scope.$apply()
-        })
-
-        var avgOpsPerSec = d3.mean(ops)
-        if(compareSample) {
-          compareMax = compareSample.maxThroughputForTest(key)
-          if(!isNaN(compareMax)){
-            var compareLine = d3.svg.line()
-            .x(function(d, i){return x(i)})
-            .y(function(d){ return y(compareMax)})
-
-            svg.append("line")
-            .attr("stroke","#6666FF")
-            .attr("stroke-width","1")
-            .attr("stroke-dasharray","5,5")
-            .attr("class", "mean-line")
-            .attr( {x1:x(0), x2:x(w), y1:y(compareMax), y2:y(compareMax)})
-          }
-        }
-
-        var padding=30
-        var yAxis = d3.svg.axis()
-        .scale(y)
-        .orient("left")
-        .ticks(5);
-      svg.append("g")
-        .attr("class", "axis")
-        .call(yAxis);
-    }
-  }
-
   $scope.getSampleAtCommit = function(series, commit) {
     return _.find(series, function(x){return x.revision == commit})
   }
@@ -230,7 +101,7 @@ function PerfController($scope, $window, $http){
     $http.get("/plugin/json/commit/" + $scope.project + "/" + $scope.compareHash + "/" + $scope.task.build_variant + "/" + $scope.task.display_name + "/perf").success(function(d){
       $scope.comparePerfSample = new TestSample(d)
       drawDetailGraph($scope.perfSample, $scope.comparePerfSample)
-      drawTrendGraph($scope.trendSamples, $scope.task.id, $scope.comparePerfSample)
+      drawTrendGraph($scope.trendSamples, $scope, $scope.task.id, $scope.comparePerfSample)
     }).error(function(){
       $scope.comparePerfSample = null
     })
@@ -262,7 +133,7 @@ function PerfController($scope, $window, $http){
     $http.get("/plugin/json/history/" + $scope.task.id + "/perf")
       .success(function(d){
         $scope.trendSamples = new TrendSamples(d)
-        setTimeout(function(){drawTrendGraph($scope.trendSamples, $scope.task.id, null)},0)
+        setTimeout(function(){drawTrendGraph($scope.trendSamples, $scope, $scope.task.id, null)},0)
       })
 
     if($scope.task.patch_info && $scope.task.patch_info.Patch.Githash){
@@ -365,4 +236,121 @@ function TestSample(sample){
     return this._maxes[testName]
   }
 
+}
+
+var drawTrendGraph = function(trendSamples, scope, taskId, compareSample) {
+  for (var i = 0; i < trendSamples.testNames.length; i++) {
+    $("#perf-trendchart-" + taskId + "-" + i).empty()
+    var margin = {
+      top: 20,
+      right: 50,
+      bottom: 30,
+      left: 50
+    }
+    var width = 960 - margin.left - margin.right
+    var height = 200 - margin.top - margin.bottom;
+
+    var key = trendSamples.testNames[i]
+    var svg = d3.select("#perf-trendchart-" + taskId + "-" + i)
+      .append("svg")
+      .attr('class', "series")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom);
+    var series = trendSamples.seriesByName[key]
+    var ops = _.pluck(series, 'ops_per_sec')
+    var y = d3.scale.linear()
+      .domain([d3.min(ops), d3.max(ops)])
+      .range([height, 0]);
+    var x = d3.scale.linear()
+      .domain([0, ops.length - 1])
+      .range([0, width]);
+
+    var line = d3.svg.line()
+      .x(function(d, i) {
+        return x(i);
+      })
+      .y(function(d) {
+        return y(d.ops_per_sec)
+      })
+
+    svg.append("path")
+      .data([series])
+      .attr("class", "line")
+      .attr("d", line)
+
+    var focus = svg.append("circle")
+      .attr("r", 4.5);
+
+    svg.selectAll(".point")
+      .data(series)
+      .enter()
+      .append("svg:circle")
+      .attr("class", "point")
+      .attr("cx", function(d, i) {
+        return x(i)
+      })
+      .attr("cy", function(d) {
+        return y(d.ops_per_sec)
+      })
+      .attr("r", 2)
+    var bsctr = d3.bisector(function(d) {
+      return y(d.ops_per_sec)
+    }).right
+    svg.append("rect")
+      .attr("class", "overlay")
+      .attr("y", margin.top)
+      .attr("width", width)
+      .attr("height", height)
+      .on("mouseover", function() {
+        focus.style("display", null);
+      })
+      .on("mouseout", function() {
+        focus.style("display", "none");
+      })
+      .on("mousemove", function(data, f, yscale, scope, series) {
+        return function() {
+          var x0 = x.invert(d3.mouse(this)[0])
+          var i = parseInt(x0)
+          f.attr("cx", x(i)).attr("cy", yscale(data[i].ops_per_sec))
+          scope.currentSample = data[i]
+          scope.currentHoverSeries = series
+          scope.$apply()
+        }
+      }(series, focus, y, scope, key));
+
+    var avgOpsPerSec = d3.mean(ops)
+    if (compareSample) {
+      compareMax = compareSample.maxThroughputForTest(key)
+      if (!isNaN(compareMax)) {
+        var compareLine = d3.svg.line()
+          .x(function(d, i) {
+            return x(i)
+          })
+          .y(function(d) {
+            return y(compareMax)
+          })
+
+        svg.append("line")
+          .attr("stroke", "#6666FF")
+          .attr("stroke-width", "1")
+          .attr("stroke-dasharray", "5,5")
+          .attr("class", "mean-line")
+          .attr({
+            x1: x(0),
+            x2: x(width),
+            y1: y(compareMax),
+            y2: y(compareMax)
+          })
+      }
+    }
+
+    var padding = 30
+    var yAxis = d3.svg.axis()
+      .scale(y)
+      .orient("left")
+      .ticks(5);
+    svg.append("g")
+      .attr("class", "axis")
+      .call(yAxis);
+  }
 }
