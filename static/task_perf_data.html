@@ -1,9 +1,23 @@
 <span ng-controller="PerfController">
 <style>
+  .line {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+  }
+
   .perf-chart-wrapper{
     display:inline-block;
   }
-
+  
+  .focus circle {
+    fill: none;
+    stroke: steelblue;
+  }
+  
+  svg{
+  border:1px solid #eee;
+  }
   .perf-chart {
     margin-top:5px;
     display:inline-block;
@@ -12,7 +26,11 @@
   .perf-table{
     border: 1px solid #ccc;
   }
-
+  .overlay{
+    fill:none;
+    stroke-width:1px;
+    pointer-events: all;
+  }
   .perf-table th {
     text-align:center;
     padding-left:10px;
@@ -57,6 +75,7 @@
   .mono {
     font-family:monospace;
   }
+
 </style>
 <div class="panel" ng-if="conf.enabled && task.status == 'success' && !!perfSample">
   <div class="panel-heading"><h4>Mongo-Perv</h4><a href="/plugin/json/task/[[task.id]]/perf/">Download raw data (JSON)</a></div>
