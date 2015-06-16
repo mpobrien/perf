@@ -2,6 +2,14 @@ var numericFilter = function(x){
   return !isNaN(parseInt(x))
 }
 
+function average (arr){
+  if(!arr || arr.length == 0) return // undefined for 0-length array
+  return _.reduce(arr, function(memo, num){
+    return memo + num;
+  }, 0) / arr.length;
+}
+
+
 function PerfController($scope, $window, $http){
   $scope.conf = $window.plugins["perf"]
   $scope.task = $window.task_data
@@ -160,12 +168,15 @@ function TrendSamples(samples){
         this.seriesByName[name] = []
       }
       var rec = samples[i].data.results[j]
-      var maxops = _.max(_.pluck(_.filter(_.values(rec.results), function(x){return typeof(x)=="object"}), "ops_per_sec"))
+      var sorted = _.sortBy(_.filter(_.values(rec.results), function(x){return typeof(x)=="object"}), "ops_per_sec")
+      var maxops = sorted[0].ops_per_sec
+      var maxops_values = 
       this.seriesByName[name].push({
         revision: samples[i].revision,
         task_id: samples[i].task_id,
-        "ops_per_sec": maxops,
-        order: samples[i].order
+        "ops_per_sec": sorted[0].ops_per_sec,
+        "ops_per_sec_values": sorted[0].ops_per_sec_values,
+        order: samples[i].order,
       })
     }
   }
@@ -193,6 +204,18 @@ function TrendSamples(samples){
 
   this.sampleInSeriesAtCommit = function(testName, revision){
     return this._sampleByCommitIndexes[testName][revision]
+  }
+
+  this.noiseAtCommit = function(testName, revision){
+    var sample = this._sampleByCommitIndexes[testName][revision]
+    if(sample && sample.ops_per_sec_values && sample.ops_per_sec_values.length > 1){
+      console.log("max:", _.max(sample.ops_per_sec_values))
+      console.log("min:", _.min(sample.ops_per_sec_values))
+      console.log("avg:", average(sample.ops_per_sec_values))
+      var r = (_.max(sample.ops_per_sec_values) - _.min(sample.ops_per_sec_values)) / average(sample.ops_per_sec_values)
+      console.log("r", r)
+      return r
+    }
   }
 
 }

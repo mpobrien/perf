@@ -14,6 +14,10 @@
     fill: none;
     stroke: steelblue;
   }
+
+  .currentrev{
+    font-weight:bold;
+  }
   
   svg{
   border:1px solid #eee;
@@ -77,7 +81,7 @@
   }
 
 </style>
-<div class="panel" ng-if="conf.enabled && task.status == 'success' && !!perfSample">
+<div class="panel">
   <div class="panel-heading"><h4>Mongo-Perv</h4><a href="/plugin/json/task/[[task.id]]/perf/">Download raw data (JSON)</a></div>
   <div class="panel-body">
     <ul class="nav nav-tabs">
@@ -129,25 +133,34 @@
         </div>
       </div>
     </div>
-    <div ng-show="perftab==3" style="overflow-x:scroll">
-      <table class="perf-table">
-        <tr>
-          <th>Test</th>
-          <td ng-repeat="c in trendSamples.commits() track by $index" class="mono">
-            [[c | limitTo:5]]
-          </td>
-        </tr>
-        <tr ng-repeat="k in trendSamples.testNames">
-          <td>[[k]]</td>
-          <td ng-repeat="c in trendSamples.commits() track by $index" class="sample-cell" ng-show="!comparePerfSample">
-            [[trendSamples.sampleInSeriesAtCommit(k, c).ops_per_sec | number:0]]
-          </td>
-          <td ng-repeat="c in trendSamples.commits() track by $index" class="sample-cell" ng-show="!!comparePerfSample" 
-            ng-style="{backgroundColor:percentToColor(100*percentDiff(trendSamples.sampleInSeriesAtCommit(k,c).ops_per_sec, comparePerfSample.maxThroughputForTest(k)))}">
-            [[100*percentDiff(trendSamples.sampleInSeriesAtCommit(k,c).ops_per_sec, comparePerfSample.maxThroughputForTest(k)) | number:2]]
-          </td>
-        </tr>
-      </table>
+    <div ng-show="perftab==3">
+      <h5>In each cell, display:</h5>
+      <div>
+        <div><label><input type="radio" ng-model="tablemode" value="maxthroughput" checked/>Max throughput</label></div>
+        <div><label><input type="radio" ng-model="tablemode" value="noise"/>Noisiness in samples</label></div>
+        <div><label ng-class="{muted:!comparePerfSample}"><input type="radio" ng-model="tablemode" value="percentdiff" ng-disabled="!comparePerfSample"/>Percent difference in throughput vs. [[compareHash]]</label></div>
+      </div>
+      <div style="overflow-x:scroll">
+        <table class="perf-table">
+          <tr>
+            <th>Test</th>
+            <td ng-repeat="c in trendSamples.commits() track by $index" class="mono" ng-class="{currentrev:c==task.gitspec}">[[c | limitTo:5]]</td>
+          </tr>
+          <tr ng-repeat="k in trendSamples.testNames">
+            <td>[[k]]</td>
+            <td ng-repeat="c in trendSamples.commits() track by $index" class="sample-cell" ng-show="tablemode=='maxthroughput'">
+              [[trendSamples.sampleInSeriesAtCommit(k, c).ops_per_sec | number:0]]
+            </td>
+            <td ng-repeat="c in trendSamples.commits() track by $index" class="sample-cell" ng-show="tablemode=='noise'">
+              [[trendSamples.noiseAtCommit(k, c) | number:2]]
+            </td>
+            <td ng-repeat="c in trendSamples.commits() track by $index" class="sample-cell" ng-show="tablemode=='percentdiff'"
+              ng-style="{backgroundColor:percentToColor(100*percentDiff(trendSamples.sampleInSeriesAtCommit(k,c).ops_per_sec, comparePerfSample.maxThroughputForTest(k)))}">
+              [[100*percentDiff(trendSamples.sampleInSeriesAtCommit(k,c).ops_per_sec, comparePerfSample.maxThroughputForTest(k)) | number:2]]
+            </td>
+          </tr>
+        </table>
+      </div>
     </div>
   </div>
 </div>
