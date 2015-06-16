@@ -14,6 +14,7 @@ function PerfController($scope, $window, $http){
   $scope.conf = $window.plugins["perf"]
   $scope.task = $window.task_data
   $scope.currentSample
+  $scope.tablemode = "maxthroughput"
   $scope.perftab = 1
   $scope.project = $window.project
   $scope.getThreadKeys = function(r){
