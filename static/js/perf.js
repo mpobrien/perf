@@ -15,6 +15,11 @@ function PerfController($scope, $window, $http){
  $scope.compareHash = ""
  $scope.comparePerfSample = null
 
+ $scope.clearCompare = function(){
+   $scope.compareHash = ""
+   $scope.comparePerfSample = null
+ }
+
  // convert a percentage to a color. Higher -> greener, Lower -> redder.
  $scope.percentToColor = function(percent) {
    var percentColorRanges = [

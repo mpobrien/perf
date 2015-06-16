@@ -86,7 +86,7 @@
       <li ng-class="{active:perftab==2}"><a href="#" ng-click="perftab=2">Trend</a></li>
       <li ng-class="{active:perftab==3}"><a href="#" ng-click="perftab=3">Trend Table</a></li>
     </ul>
-    <div class="compare-input">Compare to commit: <input type="text" placeholder="githash" ng-model="compareHash"><button ng-click="updateComparison(compareHash)" class="btn btn-primary btn-small">Update</button></div>
+    <div class="compare-input">Compare to commit: <input type="text" placeholder="githash" ng-model="compareHash"><button ng-click="updateComparison(compareHash)" class="btn btn-primary btn-small">Update</button><button class="btn btn-primary btn-small" ng-click="clearCompare()" ng-disabled="!!comparePerfSample"></button></div>
     <div ng-show="perftab==0">
       <div class="perf-chart-wrapper col-lg-3" ng-repeat="testName in perfSample.testNames()">
         <span class="chart-testname">[[testName]]</span>
