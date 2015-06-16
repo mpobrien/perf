@@ -116,9 +116,9 @@
     </div>
     <div ng-show="perftab==2">
       <div class="perf-trendchart-wrapper" ng-repeat="k in trendSamples.testNames">
+        <h4>[[k]]</h4>
         <div class="row">
-          <div class="col-lg-3">
-            <span class="chart-testname">[[k]]</span>
+          <div class="col-lg-1">
             <div ng-show="currentHoverSeries==k">
               <div class="mono">[[currentSample.revision | limitTo : 5]]</div>
               <div>Ops per sec: [[currentSample.ops_per_sec | number:0]]</div>
