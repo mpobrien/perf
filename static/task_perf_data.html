@@ -80,7 +80,6 @@
 <div class="panel" ng-if="conf.enabled && task.status == 'success' && !!perfSample">
   <div class="panel-heading"><h4>Mongo-Perv</h4><a href="/plugin/json/task/[[task.id]]/perf/">Download raw data (JSON)</a></div>
   <div class="panel-body">
-
     <ul class="nav nav-tabs">
       <li ng-class="{active:perftab==0}"><a href="#" ng-click="perftab=0">Graph</a></li>
       <li ng-class="{active:perftab==1}"><a href="#" ng-click="perftab=1">Table</a></li>
@@ -89,18 +88,10 @@
     </ul>
     <div class="compare-input">Compare to commit: <input type="text" placeholder="githash" ng-model="compareHash"><button ng-click="updateComparison(compareHash)" class="btn btn-primary btn-small">Update</button></div>
     <div ng-show="perftab==0">
-      <div class="perf-trendchart-wrapper" ng-repeat="k in trendSamples.testNames">
-        <div class="row">
-          <div class="col-lg-3">
-            <span class="chart-testname">[[k]]</span>
-            <div ng-show="currentHoverSeries==k">
-              <div class="mono">[[currentSample.revision | limitTo : 5]]</div>
-              <div>Ops per sec: [[currentSample.ops_per_sec | number:0]]</div>
-              <div ng-show="!!comparePerfSample"> [[100*percentDiff(currentSample.ops_per_sec, comparePerfSample.maxThroughputForTest(k)) | number:2]]% </div>
-            </div>
-          </div>
-          <div class="col-lg-3 perf-trendchart" id="perf-trendchart-[[$index]]"></div>
-        </div>
+      <div class="perf-chart-wrapper col-lg-3" ng-repeat="testName in perfSample.testNames()">
+        <span class="chart-testname">[[testName]]</span>
+          <div id="y_axis-{{$index}}" class="y-axis"></div>
+          <div class="perf-chart" id="chart-[[task.id]]-[[$index]]"></div>
       </div>
     </div>
     <div ng-show="perftab==1">
@@ -125,18 +116,18 @@
     </div>
     <div ng-show="perftab==2">
       <div class="perf-trendchart-wrapper" ng-repeat="k in trendSamples.testNames">
-        <span class="chart-testname">[[k]]</span>
-        <div class="perf-trendchart" id="perf-trendchart-[[task.id]]-[[$index]]">
+        <div class="row">
+          <div class="col-lg-3">
+            <span class="chart-testname">[[k]]</span>
+            <div ng-show="currentHoverSeries==k">
+              <div class="mono">[[currentSample.revision | limitTo : 5]]</div>
+              <div>Ops per sec: [[currentSample.ops_per_sec | number:0]]</div>
+              <div ng-show="!!comparePerfSample"> [[100*percentDiff(currentSample.ops_per_sec, comparePerfSample.maxThroughputForTest(k)) | number:2]]% </div>
+            </div>
+          </div>
+          <div class="col-lg-3 perf-trendchart" id="perf-trendchart-[[$index]]"></div>
         </div>
       </div>
-      <!--<div ng-show="currentSample != null">
-        <table>
-          <tr><td class="comparison-table-header">Task:</td><td>[[currentSample.task_id]]</td></tr>
-          <tr><td class="comparison-table-header">Ops per sec (max):</td><td>[[currentSample.ops_per_sec]]</td></tr>
-          <tr><td class="comparison-table-header">vs. this task:</td><td>[[getCompareDescription(currentSample, sample)]]</td></tr>
-        </table>
-      </div>
-      -->
     </div>
     <div ng-show="perftab==3" style="overflow-x:scroll">
       <table class="perf-table">
