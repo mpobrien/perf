@@ -138,9 +138,9 @@
     <div ng-show="perftab==3">
       <h5>In each cell, display:</h5>
       <div>
-        <div><label>&nbsp;<input type="radio" ng-model="tablemode" value="maxthroughput" checked/>Max throughput</label></div>
-        <div><label>&nbsp;<input type="radio" ng-model="tablemode" value="noise"/>Noisiness in samples</label></div>
-        <div><label ng-class="{muted:!comparePerfSample}">&nbsp;<input type="radio" ng-model="tablemode" value="percentdiff" ng-disabled="!comparePerfSample"/>Percent difference in throughput vs. [[compareHash]]</label></div>
+        <div><label><input type="radio" ng-model="tablemode" value="maxthroughput" checked/>&nbsp;Max throughput</label></div>
+        <div><label><input type="radio" ng-model="tablemode" value="noise"/>&nbsp;Noisiness in samples</label></div>
+        <div><label ng-class="{muted:!comparePerfSample}">&nbsp;<input type="radio" ng-model="tablemode" value="percentdiff" ng-disabled="!comparePerfSample"/>&nbsp;Percent difference in throughput vs. [[compareHash]]</label></div>
       </div>
       <div style="overflow-x:scroll">
         <table class="perf-table">
