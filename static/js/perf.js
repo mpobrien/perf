@@ -65,38 +65,85 @@ function PerfController($scope, $window, $http){
     return _.max(_.filter(_.pluck(_.values(r), 'ops_per_sec'), numericFilter))
   }
 
-  var drawDetailGraph = function(sample1, sample2){
-    var testNames = sample1.testNames()
+  function drawDetailGraph(sample, compareSample, taskId){
+    var testNames = sample.testNames()
     for(var i=0;i<testNames.length;i++){
       var testName = testNames[i]
-      $("#chart-" + $scope.task.id + "-" + i).empty()
+      $("#chart-" + taskId + "-" + i).empty()
+      var series1 = sample.threadsVsOps(testName);
+      var margin = { top: 20, right: 50, bottom: 30, left: 50 };
+      var width = 450 - margin.left - margin.right;
+      var height = 200 - margin.top - margin.bottom;
+      var svg = d3.select("#chart-" + taskId + "-" + i)
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-      var testname = testNames[i]
-      var series = [{ color: 'lightblue', data: sample1.threadsVsOps(testName)}]
-      if(!!sample2){
-        series.push({ color: 'lightpink', data: sample2.threadsVsOps(testName)})
+      var series = [series1];
+      var numSeries = 1;
+      if(!!compareSample){
+        var series2 = compareSample.threadsVsOps(testName);
+        series.push(series2);
       }
 
-      var target = "#chart-" + $scope.task.id + "-" + i
-      var graph = new Rickshaw.Graph( {
-        element: document.querySelector(target), 
-          width: 150, 
-          height: 80, 
-          renderer:"bar",
-          stack:false,
-          series: series,
-          padding: {top: 0.2, left: 0.1, right: 0.1, bottom: 0.1},
+      var y = d3.scale.linear()
+        .domain([0, d3.max(_.pluck(_.flatten(series), "ops_per_sec"))])
+        .range([height, 0]);
+      var x = d3.scale.ordinal()
+        .domain(_.pluck(_.flatten(series), "threads"))
+        .rangeRoundBands([0, width]);
+      var x1 = d3.scale.ordinal()
+        .domain(d3.range(series.length))
+        .rangeBands([0, x.rangeBand()], .3);
 
-      })
+      var z = d3.scale.category10();
 
-      var yAxis = new Rickshaw.Graph.Axis.Y({ graph: graph, ticks:2 });
-      var x_axis = new Rickshaw.Graph.Axis.X({ 
-        graph: graph, 
-        orientation:"top",
-        tickValues:_.map(sample1.threads(), function(k){return parseInt(k)-.5}), 
-         tickFormat:function(t){return Math.floor(t)+1}
+      var bar = svg.selectAll("g")
+        .data(series)
+        .enter().append("g")
+        .style("fill", function(d, i) { return z(i); })
+        .attr("transform", function(d, i) { return "translate(" + x1(i) + ",0)"; });
+
+      bar.selectAll("rect")
+        .data(function(d){return d})
+        .enter().append("rect")
+        .attr('stroke', 'black')
+        .attr('x', function(d, i) {
+          return x(d.threads)
+        })
+      .attr('y', function(d){
+        return y(d.ops_per_sec)
       })
-      graph.render();
+      .attr('height', function(d) {
+        return height-y(d.ops_per_sec)
+      })
+      .attr("width", x1.rangeBand());
+
+      var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left");
+
+      /* bar.selectAll("text")
+         .data(function(d){return d})
+         .enter().append("text")
+         .attr("fill","black")
+         .attr("x", function(d) { return x(d.threads) })
+         .attr("y", function(d) { return y(d.ops_per_sec) - 3; })
+         .attr("font-size", ".7em")
+         .text(function(d) { return parseInt(d.ops_per_sec)});*/
+
+      var xAxis = d3.svg.axis()
+        .scale(x)
+        .orient("bottom");
+      svg.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis);
+      svg.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
     }
   }
 
@@ -114,7 +161,7 @@ function PerfController($scope, $window, $http){
     $scope.compareHash = x
     $http.get("/plugin/json/commit/" + $scope.project + "/" + $scope.compareHash + "/" + $scope.task.build_variant + "/" + $scope.task.display_name + "/perf").success(function(d){
       $scope.comparePerfSample = new TestSample(d)
-      drawDetailGraph($scope.perfSample, $scope.comparePerfSample)
+      drawDetailGraph($scope.perfSample, $scope.comparePerfSample, $scope.task.id)
       drawTrendGraph($scope.trendSamples, $scope, $scope.task.id, $scope.comparePerfSample)
     }).error(function(){
       $scope.comparePerfSample = null
@@ -129,7 +176,7 @@ function PerfController($scope, $window, $http){
         var w = 700
         var bw = 1
         var h = 100
-        setTimeout(function(){drawDetailGraph($scope.perfSample)},0)
+        setTimeout(function(){drawDetailGraph($scope.perfSample, null, $scope.task.id)},0)
       })
 
     function generateSummary(sample){
@@ -210,11 +257,7 @@ function TrendSamples(samples){
   this.noiseAtCommit = function(testName, revision){
     var sample = this._sampleByCommitIndexes[testName][revision]
     if(sample && sample.ops_per_sec_values && sample.ops_per_sec_values.length > 1){
-      console.log("max:", _.max(sample.ops_per_sec_values))
-      console.log("min:", _.min(sample.ops_per_sec_values))
-      console.log("avg:", average(sample.ops_per_sec_values))
       var r = (_.max(sample.ops_per_sec_values) - _.min(sample.ops_per_sec_values)) / average(sample.ops_per_sec_values)
-      console.log("r", r)
       return r
     }
   }
@@ -237,16 +280,20 @@ function TestSample(sample){
     return _.pluck(this.sample.data.results, "name") 
   }
 
-  this.threadsVsOps = function(testName){
+  this.threadsVsOps = function(testName) {
     var testInfo = this.resultForTest(testName)
     var result = []
-    if(!testInfo)
+    if (!testInfo)
       return
     var series = testInfo.results
     var keys = _.filter(_.keys(series), numericFilter)
-    for(var j=0;j<keys.length;j++){
-      result.push({x:j, y:series[keys[j]].ops_per_sec})
+    for (var j = 0; j < keys.length; j++) {
+      result.push({
+        threads: parseInt(keys[j]),
+        ops_per_sec: series[keys[j]].ops_per_sec
+      })
     }
+    _.sortBy(result, "threads")
     return result
   }
 
