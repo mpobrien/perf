@@ -125,14 +125,32 @@ function PerfController($scope, $window, $http){
         .scale(y)
         .orient("left");
 
-      /* bar.selectAll("text")
-         .data(function(d){return d})
-         .enter().append("text")
-         .attr("fill","black")
-         .attr("x", function(d) { return x(d.threads) })
-         .attr("y", function(d) { return y(d.ops_per_sec) - 3; })
-         .attr("font-size", ".7em")
-         .text(function(d) { return parseInt(d.ops_per_sec)});*/
+      var errorBarArea = d3.svg.area()
+        .x(function(d) {
+          return x(d.threads) + (x1.rangeBand() / 2);
+        })
+        .y0(function(d) {
+          return y(d3.min(d.ops_per_sec_values))     
+        })
+        .y1(function(d) {
+          return y(d3.max(d.ops_per_sec_values))
+        }).interpolate("linear");
+
+
+      bar.selectAll(".err")
+        .data(function(d) {
+          return d.filter(function(d){
+            return ("ops_per_sec_values" in d) && (d.ops_per_sec_values.length > 1)
+          })
+        })
+      .enter().append("svg")
+        .attr("class", "err")
+        .append("path")
+        .attr("stroke", "red")
+        .attr("stroke-width", 1.5)
+        .attr("d", function(d) {
+          return errorBarArea([d])
+        });
 
       var xAxis = d3.svg.axis()
         .scale(x)
@@ -290,7 +308,8 @@ function TestSample(sample){
     for (var j = 0; j < keys.length; j++) {
       result.push({
         threads: parseInt(keys[j]),
-        ops_per_sec: series[keys[j]].ops_per_sec
+        ops_per_sec: series[keys[j]].ops_per_sec,
+        ops_per_sec_values: series[keys[j]].ops_per_sec_values,
       })
     }
     _.sortBy(result, "threads")
