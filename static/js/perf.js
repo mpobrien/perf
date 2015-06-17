@@ -198,7 +198,7 @@ function TrendSamples(samples){
 
   this.tasksByCommitOrder = function(testName){
     if(!this._tasks){
-      this._tasks = _.sortBy(_.uniq(_.flatten(_.values(this.seriesByName)), false,  "task_id"), "order")
+      this._tasks = _.sortBy(_.uniq(_.flatten(_.values(this.seriesByName)), false,  function(x){return x.task_id}), "order")
     }
     return this._tasks
   }
