@@ -196,11 +196,11 @@ function TrendSamples(samples){
     }
   }
 
-  this.commits = function(testName){
-    if(!this._commits){
-      this._commits = _.uniq(_.pluck(_.sortBy(_.flatten(_.values(this.seriesByName)), "order"), "revision"), false)
+  this.tasksByCommitOrder = function(testName){
+    if(!this._tasks){
+      this._tasks = _.sortBy(_.uniq(_.flatten(_.values(this.seriesByName)), false,  "task_id"), "order")
     }
-    return this._commits
+    return this._tasks
   }
 
   this.sampleInSeriesAtCommit = function(testName, revision){
@@ -339,7 +339,7 @@ var drawTrendGraph = function(trendSamples, scope, taskId, compareSample) {
       .on("mousemove", function(data, f, yscale, scope, series) {
         return function() {
           var x0 = x.invert(d3.mouse(this)[0])
-          var i = parseInt(x0)
+          var i = Math.round(x0)
           f.attr("cx", x(i)).attr("cy", yscale(data[i].ops_per_sec))
           scope.currentSample = data[i]
           scope.currentHoverSeries = series
