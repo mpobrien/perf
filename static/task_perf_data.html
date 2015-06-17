@@ -94,7 +94,7 @@
       <button ng-click="updateComparison(compareHash)" class="btn btn-primary btn-small">Update</button>&nbsp;
       <button class="btn btn-small" ng-click="clearCompare()" ng-disabled="!comparePerfSample">Clear</button></div>
     <div ng-show="perftab==0">
-      <div class="perf-chart-wrapper col-lg-3" ng-repeat="testName in perfSample.testNames()">
+      <div class="perf-chart-wrapper col-lg-4" ng-repeat="testName in perfSample.testNames()">
         <span class="chart-testname">[[testName]]</span>
           <div id="y_axis-{{$index}}" class="y-axis"></div>
           <div class="perf-chart" id="chart-[[task.id]]-[[$index]]"></div>

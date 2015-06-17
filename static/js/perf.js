@@ -71,7 +71,7 @@ function PerfController($scope, $window, $http){
       var testName = testNames[i]
       $("#chart-" + taskId + "-" + i).empty()
       var series1 = sample.threadsVsOps(testName);
-      var margin = { top: 20, right: 50, bottom: 30, left: 50 };
+      var margin = { top: 20, right: 50, bottom: 30, left: 80 };
       var width = 450 - margin.left - margin.right;
       var height = 200 - margin.top - margin.bottom;
       var svg = d3.select("#chart-" + taskId + "-" + i)
