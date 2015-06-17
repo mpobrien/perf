@@ -138,15 +138,17 @@
     <div ng-show="perftab==3">
       <h5>In each cell, display:</h5>
       <div>
-        <div><label><input type="radio" ng-model="tablemode" value="maxthroughput" checked/>Max throughput</label></div>
-        <div><label><input type="radio" ng-model="tablemode" value="noise"/>Noisiness in samples</label></div>
-        <div><label ng-class="{muted:!comparePerfSample}"><input type="radio" ng-model="tablemode" value="percentdiff" ng-disabled="!comparePerfSample"/>Percent difference in throughput vs. [[compareHash]]</label></div>
+        <div><label>&nbsp;<input type="radio" ng-model="tablemode" value="maxthroughput" checked/>Max throughput</label></div>
+        <div><label>&nbsp;<input type="radio" ng-model="tablemode" value="noise"/>Noisiness in samples</label></div>
+        <div><label ng-class="{muted:!comparePerfSample}">&nbsp;<input type="radio" ng-model="tablemode" value="percentdiff" ng-disabled="!comparePerfSample"/>Percent difference in throughput vs. [[compareHash]]</label></div>
       </div>
       <div style="overflow-x:scroll">
         <table class="perf-table">
           <tr>
             <th>Test</th>
-            <td ng-repeat="t in trendSamples.tasksByCommitOrder() track by $index" class="mono" ng-class="{currentrev:t.revision==task.gitspec}">[[c | limitTo:5]]</td>
+            <td ng-repeat="t in trendSamples.tasksByCommitOrder() track by $index" class="mono" ng-class="{currentrev:t.revision==task.gitspec}">
+              <a href="/task/[[t.task_id]]">[[t.revision | limitTo:5]]</a>
+            </td>
           </tr>
           <tr ng-repeat="k in trendSamples.testNames">
             <td>[[k]]</td>
