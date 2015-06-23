@@ -423,7 +423,7 @@ var drawTrendGraph = function(trendSamples, scope, taskId, compareSample) {
       })
       .on("mousemove", function(data, f, xscale, yscale, scope, series) {
         return function() {
-          if(key in scope.lockedSeries){
+          if(series in scope.lockedSeries){
             return;
           }
           var x0 = xscale.invert(d3.mouse(this)[0]);
