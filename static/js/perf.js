@@ -162,6 +162,45 @@ function PerfController($scope, $window, $http){
       svg.append("g")
         .attr("class", "y axis")
         .call(yAxis);
+
+      var legendHeight = (series.length * 10) + 10
+      var legendWidth = 100
+      var legend_y = d3.scale.ordinal()
+        .domain(d3.range(series.length))
+        .rangeBands([0, legendHeight],.1);
+      if(series.length > 1){
+        var svg = d3.select("#legend")
+          .append("svg")
+          .attr("width", legendWidth)
+          .attr("height", (series.length * 50) + 10)
+          .append("g")
+        svg.selectAll("rect")
+          .data(series)
+          .enter()
+          .append("rect")
+          .attr("fill", function(d,i){return z(i)})
+          .attr("x", function(d,i){return 0})
+          .attr("y", function(d,i){return 5 + legend_y(i)})
+          .attr("width", legendWidth/2)
+          .attr("height", legend_y.rangeBand())
+        svg.selectAll("text")
+          .data(series)
+          .enter()
+          .append("text")
+          .attr("x", function(d,i){return legendWidth/2+10})
+          .attr("y", function(d,i){return 10 + legend_y(i)})
+          .attr("dy", ".35em")
+          .text(function(d,i){
+            if(i==0){
+              return "this task"
+            }else{
+              return compareSample.revision
+            }
+          })
+      }
+
+
+
     }
   }
 

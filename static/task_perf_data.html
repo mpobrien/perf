@@ -81,7 +81,7 @@
   }
 
 </style>
-<div class="panel" ng-if="conf.enabled && task.status == 'success' && !!perfSample">
+<div class="panel" ng-if="conf.enabled && !!perfSample">
   <div class="panel-heading"><h4>Mongo-Perv</h4><a href="/plugin/json/task/[[task.id]]/perf/">Download raw data (JSON)</a></div>
   <div class="panel-body">
     <ul class="nav nav-tabs">
@@ -94,7 +94,9 @@
       <button ng-click="updateComparison(compareHash)" class="btn btn-primary btn-small">Update</button>&nbsp;
       <button class="btn btn-small" ng-click="clearCompare()" ng-disabled="!comparePerfSample">Clear</button></div>
     <div ng-show="perftab==0">
-      <div class="perf-chart-wrapper col-lg-4" ng-repeat="testName in perfSample.testNames()">
+      <div class="perf-chart-wrapper col-lg-3" id="legend">
+      </div>
+      <div class="perf-chart-wrapper col-lg-5" ng-repeat="testName in perfSample.testNames()">
         <span class="chart-testname">[[testName]]</span>
           <div id="y_axis-{{$index}}" class="y-axis"></div>
           <div class="perf-chart" id="chart-[[task.id]]-[[$index]]"></div>
