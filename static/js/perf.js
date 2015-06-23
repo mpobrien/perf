@@ -163,12 +163,12 @@ function PerfController($scope, $window, $http){
         .attr("class", "y axis")
         .call(yAxis);
 
-      var legendHeight = (series.length * 10) + 10
-      var legendWidth = 100
-      var legend_y = d3.scale.ordinal()
-        .domain(d3.range(series.length))
-        .rangeBands([0, legendHeight],.1);
-      if(series.length > 1){
+      if(i==0 && series.length > 1){
+        var legendHeight = (series.length * 10) + 10
+        var legendWidth = 100
+        var legend_y = d3.scale.ordinal()
+          .domain(d3.range(series.length))
+          .rangeBands([0, legendHeight],.1);
         var svg = d3.select("#legend")
           .append("svg")
           .attr("width", legendWidth)
@@ -194,7 +194,7 @@ function PerfController($scope, $window, $http){
             if(i==0){
               return "this task"
             }else{
-              return compareSample.revision
+              return compareSample.sample.revision
             }
           })
       }
