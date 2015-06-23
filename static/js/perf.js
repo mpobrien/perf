@@ -27,6 +27,7 @@ function PerfController($scope, $window, $http){
  $scope.clearCompare = function(){
    $scope.compareHash = ""
    $scope.comparePerfSample = null
+   drawTrendGraph($scope.trendSamples, $scope, $scope.task.id, $scope.comparePerfSample)
  }
 
  // convert a percentage to a color. Higher -> greener, Lower -> redder.
