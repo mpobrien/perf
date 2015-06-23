@@ -168,7 +168,7 @@ function PerfController($scope, $window, $http){
         var legendWidth = 100
         var legend_y = d3.scale.ordinal()
           .domain(d3.range(series.length))
-          .rangeBands([0, legendHeight],.1);
+          .rangeBands([0, legendHeight],.02);
         var svg = d3.select("#legend")
           .append("svg")
           .attr("width", legendWidth)
@@ -274,13 +274,11 @@ function TrendSamples(samples){
       }
       var rec = samples[i].data.results[j]
       var sorted = _.sortBy(_.filter(_.values(rec.results), function(x){return typeof(x)=="object"}), "ops_per_sec")
-      var maxops = sorted[0].ops_per_sec
-      var maxops_values = 
       this.seriesByName[name].push({
         revision: samples[i].revision,
         task_id: samples[i].task_id,
-        "ops_per_sec": sorted[0].ops_per_sec,
-        "ops_per_sec_values": sorted[0].ops_per_sec_values,
+        "ops_per_sec": sorted[sorted.length-1].ops_per_sec,
+        "ops_per_sec_values": sorted[sorted.length-1].ops_per_sec_values,
         order: samples[i].order,
       })
     }
@@ -373,6 +371,7 @@ function TestSample(sample){
 }
 
 var drawTrendGraph = function(trendSamples, scope, taskId, compareSample) {
+  $("#legend").empty()
   for (var i = 0; i < trendSamples.testNames.length; i++) {
     $("#perf-trendchart-" + taskId + "-" + i).empty()
     var margin = {
