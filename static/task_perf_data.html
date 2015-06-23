@@ -95,7 +95,7 @@
     </div>
     <div class="compare-about" ng-show="!!comparePerfSample">
       <br/>
-      <div>Comparing to [[comparePerfSample.sample.revision | limitTo:5]] &nbsp;<button ng-click="clearCompare()" class="btn btn-primary btn-small">Clear</button></div>
+      <div>Comparing to <a ng-href="/task/[[comparePerfSample.sample.task_id]]">[[comparePerfSample.sample.revision | limitTo:5]]</a> &nbsp;<button ng-click="clearCompare()" class="btn btn-primary btn-small">Clear</button></div>
       <br/>
     </div>
       
@@ -135,7 +135,7 @@
         <div class="row">
           <div class="col-lg-1">
             <div ng-show="currentHoverSeries==k">
-              <div class="mono">[[currentSample.revision | limitTo : 5]]</div>
+              <div class="mono"><a ng-href="/task/[[currentSample.task_id]]">[[currentSample.revision | limitTo : 5]]</a></div>
               <div>Ops per sec: [[currentSample.ops_per_sec | number:0]]</div>
               <div ng-show="!!comparePerfSample" ng-style="{backgroundColor:percentToColor(100*percentDiff(currentSample.ops_per_sec, comparePerfSample.maxThroughputForTest(k)))}"> [[Math.abs(100*percentDiff(currentSample.ops_per_sec, comparePerfSample.maxThroughputForTest(k))) | number:2]]% 
                 <span ng-show="currentSample.ops_per_sec > comparePerfSample.maxThroughputForTest(k)"> better than <span class="mono">[[comparePerfSample.sample.revision | limitTo:5]]</span></span> 

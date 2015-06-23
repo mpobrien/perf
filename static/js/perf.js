@@ -22,14 +22,15 @@ function PerfController($scope, $window, $http){
     var keys = _.uniq(_.filter(_.flatten(_.map(r, function(x){ return _.keys(x.results) }), true), numericFilter))
     return keys
   }
- $scope.compareHash = ""
- $scope.comparePerfSample = null
+  $scope.lockedSeries = {}
+  $scope.compareHash = ""
+  $scope.comparePerfSample = null
 
- $scope.clearCompare = function(){
-   $scope.compareHash = ""
-   $scope.comparePerfSample = null
-   drawTrendGraph($scope.trendSamples, $scope, $scope.task.id, $scope.comparePerfSample)
- }
+  $scope.clearCompare = function(){
+    $scope.compareHash = "";
+    $scope.comparePerfSample = null;
+    drawTrendGraph($scope.trendSamples, $scope, $scope.task.id, $scope.comparePerfSample);
+  }
 
  // convert a percentage to a color. Higher -> greener, Lower -> redder.
  $scope.percentToColor = function(percent) {
@@ -444,6 +445,9 @@ var drawTrendGraph = function(trendSamples, scope, taskId, compareSample) {
       })
       .on("mousemove", function(data, f, yscale, scope, series) {
         return function() {
+          if(key in scope.lockedSeries){
+            return
+          }
           var x0 = x.invert(d3.mouse(this)[0])
           var i = Math.round(x0)
           f.attr("cx", x(i)).attr("cy", yscale(data[i].ops_per_sec))
@@ -451,7 +455,16 @@ var drawTrendGraph = function(trendSamples, scope, taskId, compareSample) {
           scope.currentHoverSeries = series
           scope.$apply()
         }
-      }(series, focus, y, scope, key));
+      }(series, focus, y, scope, key))
+      .on("click", function(key, scope){
+          return function(){
+            if(key in scope.lockedSeries){
+              delete scope.lockedSeries[key]
+              return
+            }
+            scope.lockedSeries[key] = true
+          }
+      }(key, scope))
 
     var avgOpsPerSec = d3.mean(ops)
     if (compareSample) {
