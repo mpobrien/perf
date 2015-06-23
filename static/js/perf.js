@@ -11,6 +11,7 @@ function average (arr){
 
 
 function PerfController($scope, $window, $http){
+  $scope.Math = $window.Math
   $scope.conf = $window.plugins["perf"]
   $scope.task = $window.task_data
   $scope.currentSample
