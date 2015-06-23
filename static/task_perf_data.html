@@ -90,11 +90,15 @@
       <li ng-class="{active:perftab==2}" ng-show="task.r=='gitter_request'"><a href="#" ng-click="perftab=2">Trend</a></li>
       <li ng-class="{active:perftab==3}" ng-show="task.r=='gitter_request'"><a href="#" ng-click="perftab=3">Trend Table</a></li>
     </ul>
-    <div class="compare-input">Compare to commit: <input type="text" placeholder="githash" ng-model="compareHash">&nbsp;
-      <button ng-click="updateComparison(compareHash)" class="btn btn-primary btn-small">Update</button>&nbsp;
-      <button class="btn btn-small" ng-click="clearCompare()" ng-disabled="!comparePerfSample">Clear</button></div>
+    <div class="compare-input" ng-show="!comparePerfSample">
+      Compare to commit: <input type="text" placeholder="githash" ng-model="compareHash">&nbsp;<button ng-click="updateComparison(compareHash)" class="btn btn-primary btn-small">Load</button>&nbsp;
+    </div>
+    <div class="compare-about" ng-show="!!comparePerfSample">
+      <div>Comparing to [[comparePerfSample.sample.revision | limitTo:5]] <button ng-click="clearCompare()" class="btn btn-primary btn-small">Clear</button></div>
+      <div class="perf-chart-wrapper col-lg-10" id="legend"></div>
+    </div>
+      
     <div ng-show="perftab==0">
-      <div class="perf-chart-wrapper col-lg-3" id="legend"></div>
       <div class="perf-chart-wrapper col-lg-5" ng-repeat="testName in perfSample.testNames()">
         <span class="chart-testname">[[testName]]</span>
           <div id="y_axis-{{$index}}" class="y-axis"></div>

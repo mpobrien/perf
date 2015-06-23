@@ -164,7 +164,7 @@ function PerfController($scope, $window, $http){
         .call(yAxis);
 
       if(i==0 && series.length > 1){
-        var legendHeight = (series.length * 10) + 10
+        var legendHeight = (series.length * 10)
         var legendWidth = 100
         var legend_y = d3.scale.ordinal()
           .domain(d3.range(series.length))
@@ -194,7 +194,7 @@ function PerfController($scope, $window, $http){
             if(i==0){
               return "this task"
             }else{
-              return compareSample.sample.revision
+              return compareSample.sample.revision.substring(0,5)
             }
           })
       }
