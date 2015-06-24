@@ -406,7 +406,10 @@ var drawTrendGraph = function(trendSamples, scope, taskId, compareSample) {
       .enter()
       .append("svg:circle")
       .attr("class", function(d){
-        return d.task_id == scope.task.id ? "point current" : "point";
+        if(d.task_id == scope.task.id){
+          return "point current"
+        }
+        return "point";
       })
       .attr("cx", function(d, i) {
         return x(i);
