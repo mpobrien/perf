@@ -405,14 +405,18 @@ var drawTrendGraph = function(trendSamples, scope, taskId, compareSample) {
       .data(series)
       .enter()
       .append("svg:circle")
-      .attr("class", "point")
+      .attr("class", function(d){
+        return d.task_id == scope.task.id ? "point current" : "point";
+      })
       .attr("cx", function(d, i) {
         return x(i);
       })
       .attr("cy", function(d) {
         return y(d.ops_per_sec);
       })
-      .attr("r", 2);
+      .attr("r", function(){
+        return d.task_id == scope.task.id ? 5 : 2;
+      });
     svg.append("rect")
       .attr("class", "overlay")
       .attr("y", margin.top)
