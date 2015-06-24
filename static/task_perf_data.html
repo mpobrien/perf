@@ -20,6 +20,11 @@
     stroke:black;
   }
 
+  .compareColumn {
+    background-color: paleturquoise !important;
+    font-weight:bold;
+  }
+
   .thisTaskColumn {
     border-left:2px solid black;
     border-left:2px solid black;
@@ -151,7 +156,10 @@
           <div class="col-lg-1">
             <div ng-show="currentHoverSeries==k">
               <div class="mono"><a ng-href="/task/[[currentSample.task_id]]">[[currentSample.revision | limitTo : 5]]</a></div>
-              <div>Ops per sec: [[currentSample.ops_per_sec | number:0]]</div>
+              <div>ops per sec: <b>[[currentSample.ops_per_sec | number:0]]</b> </div>
+              <div ng-show="!comparePerfSample">
+                <button ng-click="updateComparison(currentSample.revision)">Compare</button>
+              </div>
               <div ng-show="!!comparePerfSample" ng-style="{backgroundColor:percentToColor(100*percentDiff(currentSample.ops_per_sec, comparePerfSample.maxThroughputForTest(k)))}"> [[Math.abs(100*percentDiff(currentSample.ops_per_sec, comparePerfSample.maxThroughputForTest(k))) | number:2]]% 
                 <span ng-show="currentSample.ops_per_sec > comparePerfSample.maxThroughputForTest(k)"> better than <span class="mono">[[comparePerfSample.sample.revision | limitTo:5]]</span></span> 
                 <span ng-show="currentSample.ops_per_sec <= comparePerfSample.maxThroughputForTest(k)"> worse than <span class="mono">[[comparePerfSample.sample.revision | limitTo:5]]</span></span> 
@@ -167,25 +175,25 @@
       <div>
         <div><label><input type="radio" ng-model="tablemode" value="maxthroughput" checked/>&nbsp;Max throughput</label></div>
         <div><label><input type="radio" ng-model="tablemode" value="noise"/>&nbsp;Noisiness in samples</label></div>
-        <div><label ng-class="{muted:!comparePerfSample}">&nbsp;<input type="radio" ng-model="tablemode" value="percentdiff" ng-disabled="!comparePerfSample"/>&nbsp;Percent difference in throughput vs. [[compareHash]]</label></div>
+        <div><label ng-class="{muted:!comparePerfSample}">&nbsp;<input type="radio" ng-model="tablemode" value="percentdiff" ng-disabled="!comparePerfSample"/>&nbsp;Percent difference in throughput vs. <span class="mono compareColumn">[[compareHash]]</span></label></div>
       </div>
       <div style="overflow-x:scroll">
         <table class="perf-table">
           <tr>
             <th>Test</th>
-            <td ng-repeat="t in trendSamples.tasksByCommitOrder() track by $index" class="mono" ng-class="{currentrev:t.revision==task.gitspec}" ng-class="{thisTaskColumn : t.task_id == task.id}" >
+            <td ng-repeat="t in trendSamples.tasksByCommitOrder() track by $index" class="mono" ng-class="{currentrev:t.revision==task.gitspec}" ng-class="{thisTaskColumn : t.task_id == task.id, compareColumn: t.revision == comparePerfSample.sample.revision}" >
               <a href="/task/[[t.task_id]]">[[t.revision | limitTo:5]]</a>
             </td>
           </tr>
           <tr ng-repeat="k in trendSamples.testNames">
             <td>[[k]]</td>
-            <td ng-repeat="t in trendSamples.tasksByCommitOrder() track by $index" class="sample-cell" ng-show="tablemode=='maxthroughput'" ng-class="{thisTaskColumn : t.task_id == task.id}" >
+            <td ng-repeat="t in trendSamples.tasksByCommitOrder() track by $index" class="sample-cell" ng-show="tablemode=='maxthroughput'" ng-class="{thisTaskColumn : t.task_id == task.id, compareColumn: t.revision == comparePerfSample.sample.revision}" >
               [[trendSamples.sampleInSeriesAtCommit(k, t.revision).ops_per_sec | number:0]]
             </td>
-            <td ng-repeat="t in trendSamples.tasksByCommitOrder() track by $index" class="sample-cell" ng-show="tablemode=='noise'" ng-class="{thisTaskColumn : t.task_id == task.id}" >
+            <td ng-repeat="t in trendSamples.tasksByCommitOrder() track by $index" class="sample-cell" ng-show="tablemode=='noise'" ng-class="{thisTaskColumn : t.task_id == task.id, compareColumn: t.revision == comparePerfSample.sample.revision}" >
               [[trendSamples.noiseAtCommit(k, t.revision) | number:2]]
             </td>
-            <td ng-repeat="t in trendSamples.tasksByCommitOrder() track by $index" class="sample-cell" ng-show="tablemode=='percentdiff'" ng-class="{thisTaskColumn : t.task_id == task.id}"
+            <td ng-repeat="t in trendSamples.tasksByCommitOrder() track by $index" class="sample-cell" ng-show="tablemode=='percentdiff'" ng-class="{thisTaskColumn : t.task_id == task.id, compareColumn: t.revision == comparePerfSample.sample.revision}"
               ng-style="{backgroundColor:percentToColor(100*percentDiff(trendSamples.sampleInSeriesAtCommit(k,t.revision).ops_per_sec, comparePerfSample.maxThroughputForTest(k)))}">
               [[100*percentDiff(trendSamples.sampleInSeriesAtCommit(k,t.revision).ops_per_sec, comparePerfSample.maxThroughputForTest(k)) | number:2]]</td>
           </tr>
