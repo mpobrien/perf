@@ -220,7 +220,6 @@ function PerfController($scope, $window, $http){
     $scope.compareHash = x;
     $http.get("/plugin/json/commit/" + $scope.project + "/" + $scope.compareHash + "/" + $scope.task.build_variant + "/" + $scope.task.display_name + "/perf").success(function(d){
       $scope.comparePerfSample = new TestSample(d);
-      $scope.$apply()
       setTimeout(function(){ 
         drawDetailGraph($scope.perfSample, $scope.comparePerfSample, $scope.task.id);
         drawTrendGraph($scope.trendSamples, $scope, $scope.task.id, $scope.comparePerfSample);
