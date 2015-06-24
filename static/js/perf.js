@@ -408,6 +408,8 @@ var drawTrendGraph = function(trendSamples, scope, taskId, compareSample) {
       .attr("class", function(d){
         if(d.task_id == scope.task.id){
           return "point current"
+        }else if(!!scope.comparePerfSample && d.revision == scope.comparePerfSample.sample.revision){
+          return "point compare"
         }
         return "point";
       })
