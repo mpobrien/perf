@@ -93,8 +93,11 @@
 
 </style>
 <div class="panel" ng-if="conf.enabled && !!perfSample">
-  <div class="panel-heading"><h4>Perf</h4><a href="/plugin/json/task/[[task.id]]/perf/">Download raw data for this task (JSON)</a></div>
-  <a ng-show="task.r=='gitter_request'" href="/plugin/json/history/[[task.id]]/perf">Download historical raw data (JSON)</a>
+  <div class="panel-heading">
+    <h4>Perf</h4>
+    <div><a href="/plugin/json/task/[[task.id]]/perf/">Download raw data for this task (JSON)</a></div>
+    <div><a ng-show="task.r=='gitter_request'" href="/plugin/json/history/[[task.id]]/perf">Download historical raw data (JSON)</a></div>
+  </div>
   <div class="panel-body">
     <ul class="nav nav-tabs">
       <li ng-class="{active:perftab==0}"><a href="#" ng-click="perftab=0">Graph</a></li>
