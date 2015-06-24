@@ -168,15 +168,15 @@ function PerfController($scope, $window, $http){
 
       if(i==0 && series.length > 1){
         $('#legend').empty()
-        var legendHeight = (series.length * 10);
-        var legendWidth = 100;
+        var legendHeight = (series.length * 20);
+        var legendWidth = 200;
         var legend_y = d3.scale.ordinal()
           .domain(d3.range(series.length))
-          .rangeBands([0, legendHeight],.02);
+          .rangeRoundBands([0, legendHeight],.2);
         var svg = d3.select("#legend")
           .append("svg")
           .attr("width", legendWidth)
-          .attr("height", (series.length * 50) + 10)
+          .attr("height", legendHeight + 10)
           .append("g");
         svg.selectAll("rect")
           .data(series)
@@ -185,15 +185,16 @@ function PerfController($scope, $window, $http){
           .attr("fill", function(d,i){return z(i)})
           .attr("x", function(d,i){return 0})
           .attr("y", function(d,i){return 5 + legend_y(i)})
-          .attr("width", legendWidth/2)
+          .attr("width", legendWidth/3)
           .attr("height", legend_y.rangeBand());
         svg.selectAll("text")
           .data(series)
           .enter()
           .append("text")
-          .attr("x", function(d,i){return legendWidth/2+10})
-          .attr("y", function(d,i){return 10 + legend_y(i)})
-          .attr("dy", ".35em")
+          .attr("x", function(d,i){return (legendWidth/3)+10})
+          .attr("y", function(d,i){return legend_y(i)})
+          .attr("dy", legend_y.rangeBand())
+          .attr("class", "mono")
           .text(function(d,i){
             if(i==0){
               return "this task";
@@ -219,8 +220,11 @@ function PerfController($scope, $window, $http){
     $scope.compareHash = x;
     $http.get("/plugin/json/commit/" + $scope.project + "/" + $scope.compareHash + "/" + $scope.task.build_variant + "/" + $scope.task.display_name + "/perf").success(function(d){
       $scope.comparePerfSample = new TestSample(d);
-      drawDetailGraph($scope.perfSample, $scope.comparePerfSample, $scope.task.id);
-      drawTrendGraph($scope.trendSamples, $scope, $scope.task.id, $scope.comparePerfSample);
+      $scope.apply()
+      setTimeout(function(){ 
+        drawDetailGraph($scope.perfSample, $scope.comparePerfSample, $scope.task.id);
+        drawTrendGraph($scope.trendSamples, $scope, $scope.task.id, $scope.comparePerfSample);
+      },0)
     }).error(function(){
       $scope.comparePerfSample = null;
     })
