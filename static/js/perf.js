@@ -414,7 +414,7 @@ var drawTrendGraph = function(trendSamples, scope, taskId, compareSample) {
       .attr("cy", function(d) {
         return y(d.ops_per_sec);
       })
-      .attr("r", function(){
+      .attr("r", function(d){
         return d.task_id == scope.task.id ? 5 : 2;
       });
     svg.append("rect")
