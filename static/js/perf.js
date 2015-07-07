@@ -11,6 +11,44 @@ function average (arr){
 
 
 function PerfController($scope, $window, $http){
+    /* for debugging
+    $sce, $compile){
+
+  var templateUrl = $sce.getTrustedResourceUrl('/plugin/perf/static/task_perf_data3.html');
+  $http.get(templateUrl).success(function(template) {
+      // template is the HTML template as a string
+
+      // Let's put it into an HTML element and parse any directives and expressions
+      // in the code. (Note: This is just an example, modifying the DOM from within
+      // a controller is considered bad style.)
+      $compile($("#perfcontents").html(template).contents())($scope);
+  }, function() {});
+  */
+
+  $scope.compareItemList = []
+  $scope.perfTagData = {}
+  $scope.compareForm = {}
+
+  $scope.checkEnter = function(keyEvent){
+    if (keyEvent.which === 13){
+      compareItemList.push($scope.compareHash)
+      $scope.compareHash = ''
+    }
+  }
+
+  $scope.removeCompareItem = function(index){
+    $scope.comparePerfSamples.splice(index,1);     
+    drawDetailGraph($scope.perfSample, $scope.comparePerfSamples, $scope.task.id);
+  }
+
+  $scope.deleteTag = function(){
+    $http.delete("/plugin/json/task/" + $scope.task.id + "/perf/tag").success(function(d){
+      delete $scope.perfTagData.tag
+    }).error(function(){
+      console.log("error")
+    })
+  }
+
   $scope.Math = $window.Math;
   $scope.conf = $window.plugins["perf"];
   $scope.task = $window.task_data;
@@ -23,14 +61,8 @@ function PerfController($scope, $window, $http){
     return keys;
   }
   $scope.lockedSeries = {};
-  $scope.compareHash = "";
-  $scope.comparePerfSample = null;
-
-  $scope.clearCompare = function(){
-    $scope.compareHash = "";
-    $scope.comparePerfSample = null;
-    drawTrendGraph($scope.trendSamples, $scope, $scope.task.id, $scope.comparePerfSample);
-  }
+  $scope.compareHash = "ss";
+  $scope.comparePerfSamples = [];
 
   // convert a percentage to a color. Higher -> greener, Lower -> redder.
   $scope.percentToColor = function(percent) {
@@ -68,7 +100,7 @@ function PerfController($scope, $window, $http){
     return _.max(_.filter(_.pluck(_.values(r), 'ops_per_sec'), numericFilter));
   }
 
-  function drawDetailGraph(sample, compareSample, taskId){
+  function drawDetailGraph(sample, compareSamples, taskId){
     var testNames = sample.testNames();
     for(var i=0;i<testNames.length;i++){
       var testName = testNames[i];
@@ -86,9 +118,11 @@ function PerfController($scope, $window, $http){
 
       var series = [series1];
       var numSeries = 1;
-      if(!!compareSample){
-        var series2 = compareSample.threadsVsOps(testName);
-        series.push(series2);
+      if(compareSamples){
+        for(var j=0;j<compareSamples.length;j++){
+          var compareSeries = compareSamples[j].threadsVsOps(testName);
+          series.push(compareSeries);
+        }
       }
 
       var y = d3.scale.linear()
@@ -199,7 +233,7 @@ function PerfController($scope, $window, $http){
             if(i==0){
               return "this task";
             }else{
-              return compareSample.sample.revision.substring(0,5);
+              return compareSamples[i-1].getLegendName()//series.legendName
             }
           });
       }
@@ -216,17 +250,40 @@ function PerfController($scope, $window, $http){
     return _.uniq(_.pluck(_.sortBy(_.flatten(_.values(seriesByName)), "order"), "revision"), true);
   }
 
-  $scope.updateComparison = function(x){
-    $scope.compareHash = x;
-    $http.get("/plugin/json/commit/" + $scope.project + "/" + $scope.compareHash + "/" + $scope.task.build_variant + "/" + $scope.task.display_name + "/perf").success(function(d){
-      $scope.comparePerfSample = new TestSample(d);
+  $scope.setTaskTag = function(keyEvent){
+    if (keyEvent.which === 13){
+      $http.post("/plugin/json/task/" + $scope.task.id + "/perf/tag", {tag:$scope.perfTagData.input}).success(function(d){
+        $scope.perfTagData.tag = $scope.perfTagData.input
+      }).error(function(){
+        console.log("error")
+      })
+    }
+    return true
+  }
+
+  $scope.addComparison = function(hash){
+    var updateGraphs = function(d){
+      var compareSample = new TestSample(d); 
+      $scope.comparePerfSamples.push(compareSample)
       setTimeout(function(){ 
-        drawDetailGraph($scope.perfSample, $scope.comparePerfSample, $scope.task.id);
-        drawTrendGraph($scope.trendSamples, $scope, $scope.task.id, $scope.comparePerfSample);
+        drawDetailGraph($scope.perfSample, $scope.comparePerfSamples, $scope.task.id);
+        drawTrendGraph($scope.trendSamples, $scope, $scope.task.id, $scope.comparePerfSamples);
       },0)
-    }).error(function(){
-      $scope.comparePerfSample = null;
-    })
+    }
+    var commitHash = hash || $scope.compareForm.hash
+    if(!!commitHash){
+      $http.get("/plugin/json/commit/" + $scope.project + "/" + commitHash + "/" + $scope.task.build_variant + "/" + $scope.task.display_name + "/perf")
+        .success(updateGraphs)
+        .error(function(e){console.log(e) })
+    }else if(!!$scope.compareForm.tag && $scope.compareForm.tag.task_id.length > 0){
+      $http.get("/plugin/json/task/" + $scope.compareForm.tag.task_id + "/perf/")
+        .success(updateGraphs)
+        .error(function(e){console.log(e) })
+    }
+    // if it was submitted from the form, reset the form
+    if(!hash){
+      $scope.compareForm = {}
+    }
   }
 
   if($scope.conf.enabled){
@@ -237,8 +294,15 @@ function PerfController($scope, $window, $http){
         var w = 700;
         var bw = 1;
         var h = 100;
+        if("tag" in d && d.tag.length > 0){
+          $scope.perfTagData.tag = d.tag
+        }
         setTimeout(function(){drawDetailGraph($scope.perfSample, null, $scope.task.id)},0);
       })
+
+    $http.get("/plugin/json/task/" + $scope.task.id + "/perf/tags").success(function(d){
+      $scope.tags = d
+    })
 
     // Populate the trend data
     $http.get("/plugin/json/history/" + $scope.task.id + "/perf")
@@ -249,7 +313,7 @@ function PerfController($scope, $window, $http){
 
     if($scope.task.patch_info && $scope.task.patch_info.Patch.Githash){
       //pre-populate comparison vs. base commit of patch.
-      $scope.updateComparison($scope.task.patch_info.Patch.Githash);
+      $scope.addComparison($scope.task.patch_info.Patch.Githash);
     }
   }
 }
@@ -328,6 +392,13 @@ function TestSample(sample){
     return _.pluck(this.sample.data.results, "name") ;
   }
 
+  this.getLegendName = function(){
+    if(!!this.sample.tag){
+      return this.sample.tag
+    }
+    return this.sample.revision.substring(0,5)
+  }
+
   this.threadsVsOps = function(testName) {
     var testInfo = this.resultForTest(testName);
     var result = [];
@@ -363,8 +434,9 @@ function TestSample(sample){
 
 }
 
-var drawTrendGraph = function(trendSamples, scope, taskId, compareSample) {
+var drawTrendGraph = function(trendSamples, scope, taskId, compareSamples) {
   for (var i = 0; i < trendSamples.testNames.length; i++) {
+    var testNameIndex = i
     $("#perf-trendchart-" + taskId + "-" + i).empty();
     var margin = { top: 20, right: 50, bottom: 30, left: 50 }
     var width = 960 - margin.left - margin.right;
@@ -384,6 +456,8 @@ var drawTrendGraph = function(trendSamples, scope, taskId, compareSample) {
     var x = d3.scale.linear()
       .domain([0, ops.length - 1])
       .range([0, width]);
+
+    var z = d3.scale.category10();
 
     var line = d3.svg.line()
       .x(function(d, i) {
@@ -440,7 +514,7 @@ var drawTrendGraph = function(trendSamples, scope, taskId, compareSample) {
           }
           var x0 = xscale.invert(d3.mouse(this)[0]);
           var i = Math.round(x0);
-          f.attr("cx", x(i)).attr("cy", yscale(data[i].ops_per_sec));
+          f.attr("cx", xscale(i)).attr("cy", yscale(data[i].ops_per_sec));
           scope.currentSample = data[i];
           scope.currentHoverSeries = series;
           scope.$apply();
@@ -457,28 +531,31 @@ var drawTrendGraph = function(trendSamples, scope, taskId, compareSample) {
       }(key, scope))
 
     var avgOpsPerSec = d3.mean(ops)
-    if (compareSample) {
-      compareMax = compareSample.maxThroughputForTest(key)
-      if (!isNaN(compareMax)) {
-        var compareLine = d3.svg.line()
-          .x(function(d, i) {
-            return x(i);
-          })
-          .y(function(d) {
-            return y(compareMax);
-          })
+    if (compareSamples) {
+      for(var j=0;j<compareSamples.length;j++){
+        var compareSample = compareSamples[j]
+        var compareMax = compareSample.maxThroughputForTest(key)
+        if (!isNaN(compareMax)) {
+          var compareLine = d3.svg.line()
+            .x(function(d, i) {
+              return x(i);
+            })
+            .y(function(d) {
+              return y(compareMax);
+            })
 
-        svg.append("line")
-          .attr("stroke", "#6666FF")
-          .attr("stroke-width", "1")
-          .attr("stroke-dasharray", "5,5")
-          .attr("class", "mean-line")
-          .attr({
-            x1: x(0),
-            x2: x(width),
-            y1: y(compareMax),
-            y2: y(compareMax)
-          })
+          svg.append("line")
+            .attr("stroke", function(d,i){return z(j+1)})
+            .attr("stroke-width", "1")
+            .attr("stroke-dasharray", "5,5")
+            .attr("class", "mean-line")
+            .attr({
+              x1: x(0),
+              x2: x(width),
+              y1: y(compareMax),
+              y2: y(compareMax)
+            })
+        }
       }
     }
 
