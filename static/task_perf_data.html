@@ -212,7 +212,7 @@
       </table>
     </div>
     <div ng-show="perftab==2">
-      <div class="perf-trendchart-wrapper" ng-repeat="k in trendSamples.testNames">
+      <div class="perf-trendchart-wrapper" ng-repeat="k in perfSample.testNames()">
         <h4>[[k]]</h4>
         <div class="row">
           <div class="col-lg-1">

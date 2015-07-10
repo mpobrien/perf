@@ -267,7 +267,7 @@ function PerfController($scope, $window, $http){
       $scope.comparePerfSamples.push(compareSample)
       setTimeout(function(){ 
         drawDetailGraph($scope.perfSample, $scope.comparePerfSamples, $scope.task.id);
-        drawTrendGraph($scope.trendSamples, $scope, $scope.task.id, $scope.comparePerfSamples);
+        drawTrendGraph($scope.trendSamples, $scope.perfSample.testNames(), $scope, $scope.task.id, $scope.comparePerfSamples);
       },0)
     }
     var commitHash = hash || $scope.compareForm.hash
@@ -308,7 +308,7 @@ function PerfController($scope, $window, $http){
     $http.get("/plugin/json/history/" + $scope.task.id + "/perf")
       .success(function(d){
         $scope.trendSamples = new TrendSamples(d);
-        setTimeout(function(){drawTrendGraph($scope.trendSamples, $scope, $scope.task.id, null)},0);
+        setTimeout(function(){drawTrendGraph($scope.trendSamples, $scope.perfSample.testNames(), $scope, $scope.task.id, null)},0);
       })
 
     if($scope.task.patch_info && $scope.task.patch_info.Patch.Githash){
@@ -434,15 +434,15 @@ function TestSample(sample){
 
 }
 
-var drawTrendGraph = function(trendSamples, scope, taskId, compareSamples) {
-  for (var i = 0; i < trendSamples.testNames.length; i++) {
+var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples) {
+  for (var i = 0; i < tests.length; i++) {
     var testNameIndex = i
     $("#perf-trendchart-" + taskId + "-" + i).empty();
     var margin = { top: 20, right: 50, bottom: 30, left: 50 }
     var width = 960 - margin.left - margin.right;
     var height = 200 - margin.top - margin.bottom;
 
-    var key = trendSamples.testNames[i];
+    var key = tests[i];
     var svg = d3.select("#perf-trendchart-" + taskId + "-" + i)
       .append("svg")
       .attr('class', "series")
