@@ -126,7 +126,7 @@ function PerfController($scope, $window, $http){
       }
 
       var y = d3.scale.linear()
-        .domain([0, d3.max(_.pluck(_.flatten(series), "ops_per_sec"))])
+        .domain([0, d3.max(_.flatten(_.pluck(_.flatten(series), "ops_per_sec_values")))])
         .range([height, 0]);
       var x = d3.scale.ordinal()
         .domain(_.pluck(_.flatten(series), "threads"))
