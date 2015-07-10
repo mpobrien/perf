@@ -177,7 +177,7 @@
     </ul>
     <div class="compare-about" ng-show="!!comparePerfSample">
       <br/>
-      <div>Comparing to <a ng-href="/task/[[comparePerfSample.sample.task_id]]">[[comparePerfSample.sample.revision | limitTo:5]]</a> &nbsp;<button ng-click="clearCompare()" class="btn btn-primary btn-small">Clear</button></div>
+      <div>Comparing to <a ng-href="/task/[[comparePerfSample.sample.task_id]]">[[comparePerfSample.sample.revision | limitTo:7]]</a> &nbsp;<button ng-click="clearCompare()" class="btn btn-primary btn-small">Clear</button></div>
       <br/>
     </div>
 
@@ -217,14 +217,14 @@
         <div class="row">
           <div class="col-lg-1">
             <div ng-show="currentHoverSeries==k">
-              <div class="mono"><a ng-href="/task/[[currentSample.task_id]]">[[currentSample.revision | limitTo : 5]]</a></div>
+              <div class="mono"><a ng-href="/task/[[currentSample.task_id]]">[[currentSample.revision | limitTo : 7]]</a></div>
               <div>ops per sec: <b>[[currentSample.ops_per_sec | number:0]]</b> </div>
               <div ng-show="!comparePerfSample">
                 <button ng-click="addComparison(currentSample.revision)">Compare</button>
               </div>
               <div ng-show="!!comparePerfSample" ng-style="{backgroundColor:percentToColor(100*percentDiff(currentSample.ops_per_sec, comparePerfSample.maxThroughputForTest(k)))}"> [[Math.abs(100*percentDiff(currentSample.ops_per_sec, comparePerfSample.maxThroughputForTest(k))) | number:2]]% 
-                <span ng-show="currentSample.ops_per_sec > comparePerfSample.maxThroughputForTest(k)"> better than <span class="mono">[[comparePerfSample.sample.revision | limitTo:5]]</span></span> 
-                <span ng-show="currentSample.ops_per_sec <= comparePerfSample.maxThroughputForTest(k)"> worse than <span class="mono">[[comparePerfSample.sample.revision | limitTo:5]]</span></span> 
+                <span ng-show="currentSample.ops_per_sec > comparePerfSample.maxThroughputForTest(k)"> better than <span class="mono">[[comparePerfSample.sample.revision | limitTo:7]]</span></span> 
+                <span ng-show="currentSample.ops_per_sec <= comparePerfSample.maxThroughputForTest(k)"> worse than <span class="mono">[[comparePerfSample.sample.revision | limitTo:7]]</span></span> 
               </div>
             </div>
           </div>
@@ -244,7 +244,7 @@
           <tr>
             <th>Test</th>
             <td ng-repeat="t in trendSamples.tasksByCommitOrder() track by $index" class="mono" ng-class="{currentrev:t.revision==task.gitspec}" ng-class="{thisTaskColumn : t.task_id == task.id, compareColumn: t.revision == comparePerfSample.sample.revision}" >
-              <a href="/task/[[t.task_id]]">[[t.revision | limitTo:5]]</a>
+              <a href="/task/[[t.task_id]]">[[t.revision | limitTo:7]]</a>
             </td>
           </tr>
           <tr ng-repeat="k in trendSamples.testNames">

@@ -396,7 +396,7 @@ function TestSample(sample){
     if(!!this.sample.tag){
       return this.sample.tag
     }
-    return this.sample.revision.substring(0,5)
+    return this.sample.revision.substring(0,7)
   }
 
   this.threadsVsOps = function(testName) {
