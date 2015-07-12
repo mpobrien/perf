@@ -517,7 +517,7 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
           f.attr("cx", xscale(i)).attr("cy", yscale(data[i].ops_per_sec));
           scope.currentSample = data[i];
           scope.currentHoverSeries = series;
-          scope.$apply();
+          scope.$digest();
         }
       }(series, focus, x, y, scope, key))
       .on("click", function(key, scope){
