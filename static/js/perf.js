@@ -52,7 +52,6 @@ function PerfController($scope, $window, $http){
   $scope.Math = $window.Math;
   $scope.conf = $window.plugins["perf"];
   $scope.task = $window.task_data;
-  $scope.currentSample;
   $scope.tablemode = "maxthroughput";
   $scope.perftab = 1;
   $scope.project = $window.project;
@@ -63,6 +62,17 @@ function PerfController($scope, $window, $http){
   $scope.lockedSeries = {};
   $scope.compareHash = "ss";
   $scope.comparePerfSamples = [];
+
+  $scope.$watch('currentHash', function(){
+    $scope.hoverSamples = {}
+    if(!!$scope.perfSample){
+      var testNames = $scope.perfSample.testNames()
+      for(var i=0;i<testNames.length;i++){
+        var s = $scope.trendSamples.sampleInSeriesAtCommit(testNames[i], $scope.currentHash) 
+        $scope.hoverSamples[testNames[i]] = s
+      }
+    }
+  })
 
   // convert a percentage to a color. Higher -> greener, Lower -> redder.
   $scope.percentToColor = function(percent) {
@@ -435,6 +445,7 @@ function TestSample(sample){
 }
 
 var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples) {
+  scope.d3data = {}
   for (var i = 0; i < tests.length; i++) {
     var testNameIndex = i
     $("#perf-trendchart-" + taskId + "-" + i).empty();
@@ -474,6 +485,7 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
 
     var focus = svg.append("circle")
       .attr("r", 4.5);
+    scope.d3data[key] = { x:x, y:y, z:z, focus:focus }
 
     svg.selectAll(".point")
       .data(series)
@@ -507,28 +519,32 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
       .on("mouseout", function() {
         focus.style("display", "none");
       })
-      .on("mousemove", function(data, f, xscale, yscale, scope, series) {
+      .on("click", function(s){
+        return function(){
+          s.locked = !s.locked
+        }
+      }(scope))
+      .on("mousemove", function(data, f, xscale, scope, series) {
         return function() {
-          if(series in scope.lockedSeries){
+          if(scope.locked){
             return;
           }
-          var x0 = xscale.invert(d3.mouse(this)[0]);
-          var i = Math.round(x0);
-          f.attr("cx", xscale(i)).attr("cy", yscale(data[i].ops_per_sec));
+
+          var i = Math.round(xscale.invert(d3.mouse(this)[0]));
+          var hash = data[i].revision
+          if(hash == scope.currentHash){
+            return
+          }
+          for(var q=0;q<tests.length;q++){
+            var d = scope.d3data[tests[q]]
+            d.focus.attr("cx", d.x(i)).attr("cy", d.y(trendSamples.sampleInSeriesAtCommit(tests[q], hash).ops_per_sec))
+          }
           scope.currentSample = data[i];
+          scope.currentHash = data[i].revision;
           scope.currentHoverSeries = series;
           scope.$digest();
         }
-      }(series, focus, x, y, scope, key))
-      .on("click", function(key, scope){
-          return function(){
-            if(key in scope.lockedSeries){
-              delete scope.lockedSeries[key];
-              return;
-            }
-            scope.lockedSeries[key] = true;
-          }
-      }(key, scope))
+      }(series, focus, x, scope, key))
 
     var avgOpsPerSec = d3.mean(ops)
     if (compareSamples) {
