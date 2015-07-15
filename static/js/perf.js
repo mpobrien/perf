@@ -59,7 +59,6 @@ function PerfController($scope, $window, $http){
     var keys = _.uniq(_.filter(_.flatten(_.map(r, function(x){ return _.keys(x.results) }), true), numericFilter));
     return keys;
   }
-  $scope.lockedSeries = {};
   $scope.compareHash = "ss";
   $scope.comparePerfSamples = [];
 
@@ -522,6 +521,7 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
       .on("click", function(s){
         return function(){
           s.locked = !s.locked
+          $scope.$digest()
         }
       }(scope))
       .on("mousemove", function(data, f, xscale, scope, series) {
