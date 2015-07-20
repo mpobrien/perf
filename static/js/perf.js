@@ -284,8 +284,8 @@ function PerfController($scope, $window, $http){
       $http.get("/plugin/json/commit/" + $scope.project + "/" + commitHash + "/" + $scope.task.build_variant + "/" + $scope.task.display_name + "/perf")
         .success(updateGraphs)
         .error(function(e){console.log(e) })
-    }else if(!!$scope.compareForm.tag && $scope.compareForm.tag.task_id.length > 0){
-      $http.get("/plugin/json/task/" + $scope.compareForm.tag.task_id + "/perf/")
+    }else if(!!$scope.compareForm.tag && $scope.compareForm.tag.tag.length > 0){
+      $http.get("/plugin/json/tag/" + $scope.project + "/" + $scope.compareForm.tag.tag + "/" + $scope.task.build_variant + "/" + $scope.task.display_name + "/perf")
         .success(updateGraphs)
         .error(function(e){console.log(e) })
     }
@@ -317,7 +317,7 @@ function PerfController($scope, $window, $http){
     $http.get("/plugin/json/history/" + $scope.task.id + "/perf")
       .success(function(d){
         $scope.trendSamples = new TrendSamples(d);
-        setTimeout(function(){drawTrendGraph($scope.trendSamples, $scope.perfSample.testNames(), $scope, $scope.task.id, null)},0);
+        setTimeout(function(){drawTrendGraph($scope.trendSamples, $scope.perfSample.testNames(), $scope, $scope.task.id, null)},1);
       })
 
     if($scope.task.patch_info && $scope.task.patch_info.Patch.Githash){
@@ -521,7 +521,7 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
       .on("click", function(s){
         return function(){
           s.locked = !s.locked
-          $scope.$digest()
+          scope.$digest()
         }
       }(scope))
       .on("mousemove", function(data, f, xscale, scope, series) {
