@@ -254,7 +254,7 @@
               [[trendSamples.sampleInSeriesAtCommit(k, t.revision).ops_per_sec | number:0]]
             </td>
             <td ng-repeat="t in trendSamples.tasksByCommitOrder() track by $index" class="sample-cell" ng-show="tablemode=='noise'" ng-class="{thisTaskColumn : t.task_id == task.id, compareColumn: t.revision == comparePerfSample.sample.revision}" >
-              [[trendSamples.noiseAtCommit(k, t.revision) | number:2]]
+              [[trendSamples.noiseAtCommit(k, t.revision)*100 | number:2]]%
             </td>
             <td ng-repeat="t in trendSamples.tasksByCommitOrder() track by $index" class="sample-cell" ng-show="tablemode=='percentdiff'" ng-class="{thisTaskColumn : t.task_id == task.id, compareColumn: t.revision == comparePerfSample.sample.revision}"
               ng-style="{backgroundColor:percentToColor(100*percentDiff(trendSamples.sampleInSeriesAtCommit(k,t.revision).ops_per_sec, comparePerfSample.maxThroughputForTest(k)))}">
