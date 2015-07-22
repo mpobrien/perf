@@ -10,7 +10,7 @@ function average (arr){
 }
 
 
-function PerfController($scope, $window, $http){
+function PerfController($scope, $window, $http, $location){
     /* for debugging
     $sce, $compile){
 
@@ -25,9 +25,40 @@ function PerfController($scope, $window, $http){
   }, function() {});
   */
 
+  $scope.hiddenGraphs = {}
   $scope.compareItemList = []
   $scope.perfTagData = {}
   $scope.compareForm = {}
+
+  $scope.isGraphHidden = function(k){
+    return $scope.hiddenGraphs[k] == true
+  }
+
+  $scope.toggleGraph = function(k){
+    if(k in $scope.hiddenGraphs){
+      delete $scope.hiddenGraphs[k]
+    }else{
+      $scope.hiddenGraphs[k] = true
+    }
+    $scope.syncHash(-1)
+  }
+
+  $scope.syncHash = function(tab){
+    var hash = {}
+    if($location.hash().length > 0){
+      hash = JSON.parse($location.hash())
+    }
+    if(Object.keys($scope.hiddenGraphs).length > 0){
+      hash.hiddenGraphs = Object.keys($scope.hiddenGraphs)
+    }
+    if(tab >=0){
+      hash.perftab = tab
+    }
+    setTimeout(function(){
+      $location.hash(JSON.stringify(hash))
+      $scope.$apply()
+    },1)
+  }
 
   $scope.checkEnter = function(keyEvent){
     if (keyEvent.which === 13){
@@ -72,6 +103,8 @@ function PerfController($scope, $window, $http){
       }
     }
   })
+
+  //$scope.$watch('perftab',$scope.syncHash)
 
   // convert a percentage to a color. Higher -> greener, Lower -> redder.
   $scope.percentToColor = function(percent) {
@@ -307,23 +340,36 @@ function PerfController($scope, $window, $http){
           $scope.perfTagData.tag = d.tag
         }
         setTimeout(function(){drawDetailGraph($scope.perfSample, null, $scope.task.id)},0);
+
+        // Populate the trend data
+        $http.get("/plugin/json/history/" + $scope.task.id + "/perf")
+          .success(function(d){
+            $scope.trendSamples = new TrendSamples(d);
+            setTimeout(function(){drawTrendGraph($scope.trendSamples, $scope.perfSample.testNames(), $scope, $scope.task.id, null)},0);
+          })
       })
 
     $http.get("/plugin/json/task/" + $scope.task.id + "/perf/tags").success(function(d){
       $scope.tags = d
     })
 
-    // Populate the trend data
-    $http.get("/plugin/json/history/" + $scope.task.id + "/perf")
-      .success(function(d){
-        $scope.trendSamples = new TrendSamples(d);
-        setTimeout(function(){drawTrendGraph($scope.trendSamples, $scope.perfSample.testNames(), $scope, $scope.task.id, null)},1);
-      })
-
     if($scope.task.patch_info && $scope.task.patch_info.Patch.Githash){
       //pre-populate comparison vs. base commit of patch.
       $scope.addComparison($scope.task.patch_info.Patch.Githash);
     }
+  }
+  if($location.hash().length>0){
+    try{
+      var hashparsed = JSON.parse($location.hash())
+      if('hiddenGraphs' in hashparsed){
+        for(var i=0;i<hashparsed.hiddenGraphs.length;i++){
+          $scope.hiddenGraphs[hashparsed.hiddenGraphs[i]]=true
+        }
+      }
+      if('perftab' in hashparsed){
+        $scope.perftab = hashparsed.perftab
+      }
+    }catch (e){ }
   }
 }
 
@@ -440,6 +486,7 @@ function TestSample(sample){
     }
     return this._maxes[testName];
   }
+
 
 }
 
@@ -584,4 +631,5 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
       .attr("class", "axis")
       .call(yAxis);
   }
+
 }
