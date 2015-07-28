@@ -574,10 +574,35 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
         return y(d.ops_per_sec)
       });
 
+    var maxline = d3.svg.line()
+      .x(function(d, i){
+        return x(i);
+      })
+      .y(function(d){
+        return y(d3.max(d.ops_per_sec_values))
+      })
+
+    var minline = d3.svg.line()
+      .x(function(d, i){
+        return x(i);
+      })
+      .y(function(d){
+        return y(d3.min(d.ops_per_sec_values))
+      })
+
+    svg.append("path")
+      .data([series])
+      .attr("class", "error-line")
+      .attr("d", line);
+
     svg.append("path")
       .data([series])
       .attr("class", "line")
-      .attr("d", line);
+      .attr("d", maxline);
+    svg.append("path")
+      .data([series])
+      .attr("class", "error-line")
+      .attr("d", minline);
 
     var focus = svg.append("circle")
       .attr("r", 4.5);
