@@ -84,7 +84,7 @@ function PerfController($scope, $window, $http, $location){
   $scope.conf = $window.plugins["perf"];
   $scope.task = $window.task_data;
   $scope.tablemode = "maxthroughput";
-  $scope.perftab = 1;
+  $scope.perftab = 2;
   $scope.project = $window.project;
   $scope.getThreadKeys = function(r){
     var keys = _.uniq(_.filter(_.flatten(_.map(r, function(x){ return _.keys(x.results) }), true), numericFilter));
