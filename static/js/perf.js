@@ -58,6 +58,8 @@ function PerfController($scope, $window, $http, $location){
 
     if($scope.savedCompares.length > 0){
       hash.compare = $scope.savedCompares
+    }else{
+      delete hash.compare
     }
     setTimeout(function(){
       $location.hash(JSON.stringify(hash))
@@ -73,8 +75,8 @@ function PerfController($scope, $window, $http, $location){
   }
 
   $scope.removeCompareItem = function(index){
-    $scope.comparePerfSamples.splice(index,1);     
-    $scope.savedCompares.splice(index,1);     
+    $scope.comparePerfSamples.splice(index,1);
+    $scope.savedCompares.splice(index,1);
     $scope.redrawGraphs()
     $scope.syncHash(-1)
   }
@@ -318,6 +320,9 @@ function PerfController($scope, $window, $http, $location){
     }else{
       saveObj.tag = formData.tag
     }
+    if(!!formData.tag && !!formData.tag.tag){
+      formData.tag = formData.tag.tag
+    }
     $scope.savedCompares.push(saveObj)
     if(!!commitHash){
       $http.get("/plugin/json/commit/" + $scope.project + "/" + commitHash + "/" + $scope.task.build_variant + "/" + $scope.task.display_name + "/perf")
@@ -329,6 +334,7 @@ function PerfController($scope, $window, $http, $location){
         })
         .error(function(e){console.log(e) })
     }else if(!!formData.tag && formData.tag.length > 0){
+      console.log("adding form")
       $http.get("/plugin/json/tag/" + $scope.project + "/" + formData.tag + "/" + $scope.task.build_variant + "/" + $scope.task.display_name + "/perf")
         .success(function(d){
           var compareSample = new TestSample(d); 
@@ -337,6 +343,8 @@ function PerfController($scope, $window, $http, $location){
             $scope.redrawGraphs()
         })
         .error(function(e){console.log(e) })
+    }else{
+      console.log("adding form2", formData)
     }
 
     $scope.compareForm = {}
