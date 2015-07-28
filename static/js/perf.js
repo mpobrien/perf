@@ -550,8 +550,15 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
       .attr("height", height + margin.top + margin.bottom);
     var series = trendSamples.seriesByName[key];
     var ops = _.pluck(series, 'ops_per_sec');
+
+    var seriesMax = d3.max(ops)
+    var compareMax = 0
+    if(compareSamples){
+        compareMax = d3.max(_.map(compareSamples, function(x){return x.maxThroughputForTest(key)}))
+    }
+
     var y = d3.scale.linear()
-      .domain([d3.min(ops), d3.max(ops)])
+      .domain([d3.min(ops), d3.max([compareMax, seriesMax])])
       .range([height, 0]);
     var x = d3.scale.linear()
       .domain([0, ops.length - 1])
