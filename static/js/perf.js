@@ -29,6 +29,7 @@ function PerfController($scope, $window, $http, $location){
   $scope.compareItemList = []
   $scope.perfTagData = {}
   $scope.compareForm = {}
+  $scope.savedCompares = []
 
   $scope.isGraphHidden = function(k){
     return $scope.hiddenGraphs[k] == true
@@ -54,6 +55,10 @@ function PerfController($scope, $window, $http, $location){
     if(tab >=0){
       hash.perftab = tab
     }
+
+    if($scope.savedCompares.length > 0){
+      hash.compare = $scope.savedCompares
+    }
     setTimeout(function(){
       $location.hash(JSON.stringify(hash))
       $scope.$apply()
@@ -69,7 +74,9 @@ function PerfController($scope, $window, $http, $location){
 
   $scope.removeCompareItem = function(index){
     $scope.comparePerfSamples.splice(index,1);     
-    drawDetailGraph($scope.perfSample, $scope.comparePerfSamples, $scope.task.id);
+    $scope.savedCompares.splice(index,1);     
+    $scope.redrawGraphs()
+    $scope.syncHash(-1)
   }
 
   $scope.deleteTag = function(){
@@ -109,13 +116,13 @@ function PerfController($scope, $window, $http, $location){
   // convert a percentage to a color. Higher -> greener, Lower -> redder.
   $scope.percentToColor = function(percent) {
     var percentColorRanges = [
-    {min:-Infinity, max:-15, color: "#FF0000"},
-    {min:-15, max:-10,       color: "#FF5500"},
-    {min:-10, max:-5,        color: "#FFAA00"},
-    {min:-5, max:-2.5,       color: "#FEFF00"},
-    {min:-2.5, max:5,        color: "#A9FF00"},
-    {min:5, max:10,          color: "#54FF00"},
-    {min:10, max:+Infinity,  color: "#00FF00"}
+      {min:-Infinity, max:-15, color: "#FF0000"},
+      {min:-15, max:-10,       color: "#FF5500"},
+      {min:-10, max:-5,        color: "#FFAA00"},
+      {min:-5, max:-2.5,       color: "#FEFF00"},
+      {min:-2.5, max:5,        color: "#A9FF00"},
+      {min:5, max:10,          color: "#54FF00"},
+      {min:10, max:+Infinity,  color: "#00FF00"}
     ];
 
     for(var i=0;i<percentColorRanges.length;i++){
@@ -303,32 +310,73 @@ function PerfController($scope, $window, $http, $location){
     return true
   }
 
-  $scope.addComparison = function(hash){
-    var updateGraphs = function(d){
-      var compareSample = new TestSample(d); 
-      $scope.comparePerfSamples.push(compareSample)
+  $scope.addComparisonForm = function(formData, draw){
+    var commitHash = formData.hash
+    var saveObj = {}
+    if(commitHash){
+      saveObj.hash = commitHash
+    }else{
+      saveObj.tag = formData.tag
+    }
+    $scope.savedCompares.push(saveObj)
+    if(!!commitHash){
+      $http.get("/plugin/json/commit/" + $scope.project + "/" + commitHash + "/" + $scope.task.build_variant + "/" + $scope.task.display_name + "/perf")
+        .success(function(d){
+          var compareSample = new TestSample(d); 
+          $scope.comparePerfSamples.push(compareSample)
+          if(draw)
+            $scope.redrawGraphs()
+        })
+        .error(function(e){console.log(e) })
+    }else if(!!formData.tag && formData.tag.length > 0){
+      $http.get("/plugin/json/tag/" + $scope.project + "/" + formData.tag + "/" + $scope.task.build_variant + "/" + $scope.task.display_name + "/perf")
+        .success(function(d){
+          var compareSample = new TestSample(d); 
+          $scope.comparePerfSamples.push(compareSample)
+          if(draw)
+            $scope.redrawGraphs()
+        })
+        .error(function(e){console.log(e) })
+    }
+
+    $scope.compareForm = {}
+    $scope.syncHash(-1)
+  }
+
+  $scope.addComparisonHash = function(hash){
+    $scope.addComparisonForm({hash:hash}, true)
+  }
+
+  $scope.updateCompares = function(){
+  }
+
+  $scope.redrawGraphs = function(){
       setTimeout(function(){ 
+        console.log("redrawing!")
         drawDetailGraph($scope.perfSample, $scope.comparePerfSamples, $scope.task.id);
         drawTrendGraph($scope.trendSamples, $scope.perfSample.testNames(), $scope, $scope.task.id, $scope.comparePerfSamples);
       },0)
-    }
-    var commitHash = hash || $scope.compareForm.hash
-    if(!!commitHash){
-      $http.get("/plugin/json/commit/" + $scope.project + "/" + commitHash + "/" + $scope.task.build_variant + "/" + $scope.task.display_name + "/perf")
-        .success(updateGraphs)
-        .error(function(e){console.log(e) })
-    }else if(!!$scope.compareForm.tag && $scope.compareForm.tag.tag.length > 0){
-      $http.get("/plugin/json/tag/" + $scope.project + "/" + $scope.compareForm.tag.tag + "/" + $scope.task.build_variant + "/" + $scope.task.display_name + "/perf")
-        .success(updateGraphs)
-        .error(function(e){console.log(e) })
-    }
-    // if it was submitted from the form, reset the form
-    if(!hash){
-      $scope.compareForm = {}
-    }
   }
 
   if($scope.conf.enabled){
+    if($location.hash().length>0){
+      try{
+        var hashparsed = JSON.parse($location.hash())
+        if('hiddenGraphs' in hashparsed){
+          for(var i=0;i<hashparsed.hiddenGraphs.length;i++){
+            $scope.hiddenGraphs[hashparsed.hiddenGraphs[i]]=true
+          }
+        }
+        if('perftab' in hashparsed){
+          $scope.perftab = hashparsed.perftab
+        }
+        if('compare' in hashparsed){
+          for(var i=0;i<hashparsed.compare.length;i++){
+            $scope.addComparisonForm(hashparsed.compare[i], false)
+          }
+        }
+      }catch (e){ }
+    }
     // Populate the graph and table for this task
     $http.get("/plugin/json/task/" + $scope.task.id + "/perf/")
       .success(function(d){
@@ -339,13 +387,13 @@ function PerfController($scope, $window, $http, $location){
         if("tag" in d && d.tag.length > 0){
           $scope.perfTagData.tag = d.tag
         }
-        setTimeout(function(){drawDetailGraph($scope.perfSample, null, $scope.task.id)},0);
+        setTimeout(function(){drawDetailGraph($scope.perfSample, $scope.comparePerfSamples, $scope.task.id)},0);
 
         // Populate the trend data
         $http.get("/plugin/json/history/" + $scope.task.id + "/perf")
           .success(function(d){
             $scope.trendSamples = new TrendSamples(d);
-            setTimeout(function(){drawTrendGraph($scope.trendSamples, $scope.perfSample.testNames(), $scope, $scope.task.id, null)},0);
+            setTimeout(function(){drawTrendGraph($scope.trendSamples, $scope.perfSample.testNames(), $scope, $scope.task.id,  $scope.comparePerfSamples)},0);
           })
       })
 
@@ -355,21 +403,8 @@ function PerfController($scope, $window, $http, $location){
 
     if($scope.task.patch_info && $scope.task.patch_info.Patch.Githash){
       //pre-populate comparison vs. base commit of patch.
-      $scope.addComparison($scope.task.patch_info.Patch.Githash);
+      $scope.addComparisonHash($scope.task.patch_info.Patch.Githash);
     }
-  }
-  if($location.hash().length>0){
-    try{
-      var hashparsed = JSON.parse($location.hash())
-      if('hiddenGraphs' in hashparsed){
-        for(var i=0;i<hashparsed.hiddenGraphs.length;i++){
-          $scope.hiddenGraphs[hashparsed.hiddenGraphs[i]]=true
-        }
-      }
-      if('perftab' in hashparsed){
-        $scope.perftab = hashparsed.perftab
-      }
-    }catch (e){ }
   }
 }
 
