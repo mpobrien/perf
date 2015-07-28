@@ -592,12 +592,12 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
 
     svg.append("path")
       .data([series])
-      .attr("class", "error-line")
+      .attr("class", "line")
       .attr("d", line);
 
     svg.append("path")
       .data([series])
-      .attr("class", "line")
+      .attr("class", "error-line")
       .attr("d", maxline);
     svg.append("path")
       .data([series])
