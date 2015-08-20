@@ -95,10 +95,6 @@ function PerfController($scope, $window, $http, $location){
   $scope.tablemode = "maxthroughput";
   $scope.perftab = $scope.task.patch_info ? 1 : 2;
   $scope.project = $window.project;
-  $scope.getThreadKeys = function(r){
-    var keys = _.uniq(_.filter(_.flatten(_.map(r, function(x){ return _.keys(x.results) }), true), numericFilter));
-    return keys;
-  }
   $scope.compareHash = "ss";
   $scope.comparePerfSamples = [];
 
@@ -497,13 +493,19 @@ function TestSample(sample){
     return this.sample.revision.substring(0,7)
   }
 
+  // Returns only the keys that have results stored in them
+  this.resultKeys = function(testName){
+    return _.pluck(_(testInfo.results).pairs().filter(function(x){return typeof(x[1]) == "object" && "ops_per_sec" in x[1]}), 0)
+  }
+
   this.threadsVsOps = function(testName) {
     var testInfo = this.resultForTest(testName);
     var result = [];
     if (!testInfo)
       return;
     var series = testInfo.results;
-    var keys = _.filter(_.keys(series), numericFilter);
+
+    var keys = this.resultKeys(testName)
     for (var j = 0; j < keys.length; j++) {
       result.push({
         threads: parseInt(keys[j]),
