@@ -495,6 +495,7 @@ function TestSample(sample){
 
   // Returns only the keys that have results stored in them
   this.resultKeys = function(testName){
+    var testInfo = this.resultForTest(testName);
     return _.pluck(_(testInfo.results).pairs().filter(function(x){return typeof(x[1]) == "object" && "ops_per_sec" in x[1]}), 0)
   }
 
