@@ -233,7 +233,7 @@ function PerfController($scope, $window, $http, $location){
       bar.selectAll(".err")
         .data(function(d) {
           return d.filter(function(d){
-            return ("ops_per_sec_values" in d) && (d.ops_per_sec_values.length > 1);
+            return ("ops_per_sec_values" in d) && ("ops_per_sec_values" in d) && (d.ops_per_sec_values.length > 1);
           })
         })
       .enter().append("svg")
