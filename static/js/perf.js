@@ -172,9 +172,18 @@ function PerfController($scope, $window, $http, $location){
         }
       }
 
-      var y = d3.scale.linear()
-        .domain([0, d3.max(_.flatten(_.pluck(_.flatten(series), "ops_per_sec_values")))])
-        .range([height, 0]);
+      var y
+      if(d3.max(_.flatten(_.pluck(_.flatten(series), "ops_per_sec_values")))){
+        y = d3.scale.linear()
+          .domain([0, d3.max(_.flatten(_.pluck(_.flatten(series), "ops_per_sec_values")))])
+          .range([height, 0]);
+      }else{
+        y = d3.scale.linear()
+          .domain([0, d3.max(_.flatten(_.pluck(_.flatten(series), "ops_per_sec")))])
+          .range([height, 0]);
+      }
+
+
       var x = d3.scale.ordinal()
         .domain(_.pluck(_.flatten(series), "threads"))
         .rangeRoundBands([0, width]);
@@ -553,6 +562,8 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
       .attr("height", height + margin.top + margin.bottom);
     var series = trendSamples.seriesByName[key];
     var ops = _.pluck(series, 'ops_per_sec');
+    var opsValues = _.pluck(series, 'ops_per_sec_values');
+    var hasValues = d3.max(opsValues) != undefined
 
     var seriesMax = d3.max(ops)
     var compareMax = 0
@@ -576,36 +587,38 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
       .y(function(d) {
         return y(d.ops_per_sec)
       });
-
-    var maxline = d3.svg.line()
-      .x(function(d, i){
-        return x(i);
-      })
-      .y(function(d){
-        return y(d3.max(d.ops_per_sec_values))
-      })
-
-    var minline = d3.svg.line()
-      .x(function(d, i){
-        return x(i);
-      })
-      .y(function(d){
-        return y(d3.min(d.ops_per_sec_values))
-      })
-
     svg.append("path")
       .data([series])
       .attr("class", "line")
       .attr("d", line);
 
-    svg.append("path")
-      .data([series])
-      .attr("class", "error-line")
-      .attr("d", maxline);
-    svg.append("path")
-      .data([series])
-      .attr("class", "error-line")
-      .attr("d", minline);
+
+    if(hasValues){
+      var maxline = d3.svg.line()
+        .x(function(d, i){
+          return x(i);
+        })
+        .y(function(d){
+          return y(d3.max(d.ops_per_sec_values))
+        })
+
+      var minline = d3.svg.line()
+        .x(function(d, i){
+          return x(i);
+        })
+        .y(function(d){
+          return y(d3.min(d.ops_per_sec_values))
+        })
+
+      svg.append("path")
+        .data([series])
+        .attr("class", "error-line")
+        .attr("d", maxline);
+      svg.append("path")
+        .data([series])
+        .attr("class", "error-line")
+        .attr("d", minline);
+    }
 
     var focus = svg.append("circle")
       .attr("r", 4.5);
