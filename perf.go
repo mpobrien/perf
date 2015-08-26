@@ -21,8 +21,7 @@ var includes = []template.HTML{
 	`<script type="text/javascript" src="/plugin/perf/static/js/perf.js"></script>`,
 }
 
-// GitPlugin handles fetching source code and applying patches
-// using the git version control system.
+// PerfPlugin displays performance statistics in the UI.
 type PerfPlugin struct {
 	Projects []string `yaml:"string"`
 }
@@ -32,8 +31,7 @@ func (pp *PerfPlugin) Name() string {
 	return "perf"
 }
 
-func (pp *PerfPlugin) GetAPIHandler() http.Handler { return nil }
-func (pp *PerfPlugin) GetUIHandler() http.Handler  { return nil }
+func (pp *PerfPlugin) GetUIHandler() http.Handler { return nil }
 func (pp *PerfPlugin) Configure(params map[string]interface{}) error {
 	err := mapstructure.Decode(params, pp)
 	if err != nil {
@@ -66,8 +64,4 @@ func (pp *PerfPlugin) GetPanelConfig() (*plugin.PanelConfig, error) {
 		},
 	}, nil
 	return nil, nil
-}
-
-func (pp *PerfPlugin) NewCommand(cmdName string) (plugin.Command, error) {
-	return nil, &plugin.ErrUnknownCommand{cmdName}
 }
