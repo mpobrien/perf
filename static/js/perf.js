@@ -147,7 +147,7 @@ function PerfController($scope, $window, $http, $location){
     return _.max(_.filter(_.pluck(_.values(r), 'ops_per_sec'), numericFilter));
   }
 
-  var cleanId = function(id){
+  cleanId = function(id){
     return id.replace(/\./g,"-")
   }
   $scope.cleanId = cleanId
