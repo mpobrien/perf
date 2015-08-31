@@ -147,16 +147,21 @@ function PerfController($scope, $window, $http, $location){
     return _.max(_.filter(_.pluck(_.values(r), 'ops_per_sec'), numericFilter));
   }
 
+  var cleanId = function(id){
+    return id.replace(/\./g,"-")
+  }
+  $scope.cleanId = cleanId
+
   function drawDetailGraph(sample, compareSamples, taskId){
     var testNames = sample.testNames();
     for(var i=0;i<testNames.length;i++){
       var testName = testNames[i];
-      $("#chart-" + taskId + "-" + i).empty();
+      $("#chart-" + cleanId(taskId) + "-" + i).empty();
       var series1 = sample.threadsVsOps(testName);
       var margin = { top: 20, right: 50, bottom: 30, left: 80 };
       var width = 450 - margin.left - margin.right;
       var height = 200 - margin.top - margin.bottom;
-      var svg = d3.select("#chart-" + taskId + "-" + i)
+      var svg = d3.select("#chart-" + cleanId(taskId) + "-" + i)
         .append("svg")
         .attr("width", width + margin.left + margin.right)
         .attr("height", height + margin.top + margin.bottom)
@@ -549,13 +554,13 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
   scope.d3data = {}
   for (var i = 0; i < tests.length; i++) {
     var testNameIndex = i
-    $("#perf-trendchart-" + taskId + "-" + i).empty();
+    $("#perf-trendchart-" + cleanId(taskId) + "-" + i).empty();
     var margin = { top: 20, right: 50, bottom: 30, left: 50 }
     var width = 960 - margin.left - margin.right;
     var height = 200 - margin.top - margin.bottom;
 
     var key = tests[i];
-    var svg = d3.select("#perf-trendchart-" + taskId + "-" + i)
+    var svg = d3.select("#perf-trendchart-" + cleanId(taskId) + "-" + i)
       .append("svg")
       .attr('class', "series")
       .attr("width", width + margin.left + margin.right)

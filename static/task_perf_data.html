@@ -191,7 +191,7 @@
       <div class="perf-chart-wrapper col-lg-5" ng-repeat="testName in perfSample.testNames()">
         <span class="chart-testname">[[testName]]</span>
         <div id="y_axis-{{$index}}" class="y-axis"></div>
-        <div class="perf-chart" id="chart-[[task.id]]-[[$index]]"></div>
+        <div class="perf-chart" id="chart-[[cleanId(task.id)]]-[[$index]]"></div>
       </div>
       <div class="row">
         <div id="legend"></div>
@@ -235,7 +235,7 @@
               </div>
             </div>
           </div>
-          <div class="col-lg-3 perf-trendchart" id="perf-trendchart-[[task.id]]-[[$index]]"></div>
+          <div class="col-lg-3 perf-trendchart" id="perf-trendchart-[[cleanId(task.id)]]-[[$index]]"></div>
         </div>
       </div>
     </div>
