@@ -211,7 +211,7 @@
           <td ng-repeat="k in perfSample.threads()">[[perfSample.resultForTest(test).results[k].ops_per_sec | number:0]]</td>
           <td>[[perfSample.maxThroughputForTest(test) | number:0]]</td>
           <td ng-repeat="comparison in comparePerfSamples">[[comparison.maxThroughputForTest(test) | number:0]]</td>
-          <td ng-repeat="comparison in comparePerfSamples" ng-style="{backgroundColor:percentToColor(100*percentDiff(comparison.maxThroughputForTest(test),comparison.maxThroughputForTest(test)))}">
+          <td ng-repeat="comparison in comparePerfSamples" ng-style="{backgroundColor:percentToColor(100*percentDiff(perfSample.maxThroughputForTest(test),comparison.maxThroughputForTest(test)))}">
             [[100*percentDiff(perfSample.maxThroughputForTest(test),comparison.maxThroughputForTest(test)) | number:2]]%
           </td>
         </tr>
