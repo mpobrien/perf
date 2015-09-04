@@ -416,7 +416,7 @@ function PerfController($scope, $window, $http, $location){
       })
 
     $http.get("/plugin/json/task/" + $scope.task.id + "/perf/tags").success(function(d){
-      $scope.tags = d
+      $scope.tags = d.sort(function(a,b){return a.tag.localeCompare(b.tag)})
     })
 
     if($scope.task.patch_info && $scope.task.patch_info.Patch.Githash){
