@@ -591,6 +591,7 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
 
     // create extra padding if seriesMax
 
+    console.log("bounds are", yAxisLowerBound, yAxisUpperBound)
     var y = d3.scale.linear()
       .domain([yAxisLowerBound, yAxisUpperBound])
       .range([height, 0]);
@@ -613,6 +614,7 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
       .attr("d", line);
 
 
+    /*
     if(hasValues){
       var maxline = d3.svg.line()
         .x(function(d, i){
@@ -639,6 +641,7 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
         .attr("class", "error-line")
         .attr("d", minline);
     }
+    */
 
     var focus = svg.append("circle")
       .attr("r", 4.5);
