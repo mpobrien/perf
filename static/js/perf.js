@@ -554,6 +554,8 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
   scope.d3data = {}
   for (var i = 0; i < tests.length; i++) {
     var testNameIndex = i
+
+    // clear out the DOM element containing the graph for this task
     $("#perf-trendchart-" + cleanId(taskId) + "-" + i).empty();
     var margin = { top: 20, right: 50, bottom: 30, left: 50 }
     var width = 960 - margin.left - margin.right;
@@ -571,13 +573,23 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
     var hasValues = d3.max(opsValues) != undefined
 
     var seriesMax = d3.max(ops)
+    var seriesAvg = d3.mean(ops)
+
+    // If the upper and lower y-axis values are very close to the average
+    // (within 10%) add extra padding to the upper and lower bounds of the graph for display
+    var yAxisUpperBound = d3.max([compareMax, seriesMax, seriesAvg*1.1])
+    var yAxisLowerBound = d3.min(d3.min(ops), seriesAvg*.9)
+
+
     var compareMax = 0
     if(compareSamples){
         compareMax = d3.max(_.map(compareSamples, function(x){return x.maxThroughputForTest(key)}))
     }
 
+    // create extra padding if seriesMax
+
     var y = d3.scale.linear()
-      .domain([d3.min(ops), d3.max([compareMax, seriesMax])])
+      .domain([yAxisLowerBound, yAxisUpperBound])
       .range([height, 0]);
     var x = d3.scale.linear()
       .domain([0, ops.length - 1])
