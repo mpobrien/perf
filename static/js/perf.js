@@ -344,7 +344,6 @@ function PerfController($scope, $window, $http, $location){
         })
         .error(function(e){console.log(e) })
     }else if(!!formData.tag && formData.tag.length > 0){
-      console.log("adding form")
       $http.get("/plugin/json/tag/" + $scope.project + "/" + formData.tag + "/" + $scope.task.build_variant + "/" + $scope.task.display_name + "/perf")
         .success(function(d){
           var compareSample = new TestSample(d); 
@@ -353,8 +352,6 @@ function PerfController($scope, $window, $http, $location){
             $scope.redrawGraphs()
         })
         .error(function(e){console.log(e) })
-    }else{
-      console.log("adding form2", formData)
     }
 
     $scope.compareForm = {}
@@ -370,7 +367,6 @@ function PerfController($scope, $window, $http, $location){
 
   $scope.redrawGraphs = function(){
       setTimeout(function(){ 
-        console.log("redrawing!")
         drawDetailGraph($scope.perfSample, $scope.comparePerfSamples, $scope.task.id);
         drawTrendGraph($scope.trendSamples, $scope.perfSample.testNames(), $scope, $scope.task.id, $scope.comparePerfSamples);
       },0)
@@ -578,11 +574,7 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
     // If the upper and lower y-axis values are very close to the average
     // (within 10%) add extra padding to the upper and lower bounds of the graph for display
     var yAxisUpperBound = d3.max([compareMax, seriesMax, seriesAvg*1.1])
-    console.log("y axis upper bound", compareMax, seriesMax, seriesAvg*1.1, yAxisUpperBound)
     var yAxisLowerBound = d3.min([d3.min(ops), seriesAvg*.9])
-
-    console.log("y axis loer bound", d3.min(ops), seriesAvg*.9)
-
 
     var compareMax = 0
     if(compareSamples){
@@ -591,7 +583,6 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
 
     // create extra padding if seriesMax
 
-    console.log("bounds are", yAxisLowerBound, yAxisUpperBound)
     var y = d3.scale.linear()
       .domain([yAxisLowerBound, yAxisUpperBound])
       .range([height, 0]);
@@ -614,7 +605,6 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
       .attr("d", line);
 
 
-    /*
     if(hasValues){
       var maxline = d3.svg.line()
         .x(function(d, i){
@@ -641,7 +631,6 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
         .attr("class", "error-line")
         .attr("d", minline);
     }
-    */
 
     var focus = svg.append("circle")
       .attr("r", 4.5);
