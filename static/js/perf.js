@@ -2,6 +2,15 @@ var numericFilter = function(x){
   return !isNaN(parseInt(x))
 }
 
+// since we are using an older version of _.js that does not have this function
+var findIndex = function(list, predicate) {
+  for(var i=0;i<list.length;i++){
+    if(predicate(list[i])){
+      return i
+    }
+  }
+}
+
 function average (arr){
   if(!arr || arr.length == 0) return // undefined for 0-length array
   return _.reduce(arr, function(memo, num){
@@ -89,10 +98,13 @@ function PerfController($scope, $window, $http, $location){
     })
   }
 
+  // needed to do Math.abs in the template code.
   $scope.Math = $window.Math;
   $scope.conf = $window.plugins["perf"];
   $scope.task = $window.task_data;
   $scope.tablemode = "maxthroughput";
+  
+  // perftab refers to which tab should be selected. 0=graph, 1=table, 2=trend, 3=trend-table
   $scope.perftab = $scope.task.patch_info ? 1 : 2;
   $scope.project = $window.project;
   $scope.compareHash = "ss";
@@ -111,16 +123,16 @@ function PerfController($scope, $window, $http, $location){
 
   //$scope.$watch('perftab',$scope.syncHash)
 
-  // convert a percentage to a color. Higher -> greener, Lower -> redder.
+  // converts a percentage to a color. Higher -> greener, Lower -> redder.
   $scope.percentToColor = function(percent) {
     var percentColorRanges = [
-      {min:-Infinity, max:-15, color: "#FF0000"},
-      {min:-15, max:-10,       color: "#FF5500"},
-      {min:-10, max:-5,        color: "#FFAA00"},
-      {min:-5, max:-2.5,       color: "#FEFF00"},
-      {min:-2.5, max:5,        color: "#A9FF00"},
-      {min:5, max:10,          color: "#54FF00"},
-      {min:10, max:+Infinity,  color: "#00FF00"}
+      {min:-Infinity, max:-15,  color: "#FF0000"},
+      {min:-15,       max:-10,  color: "#FF5500"},
+      {min:-10,       max:-5,        color: "#FFAA00"},
+      {min:-5,        max:-2.5,      color: "#FEFF00"},
+      {min:-2.5,      max:5,         color: "#A9FF00"},
+      {min:5,         max:10,        color: "#54FF00"},
+      {min:10,        max:+Infinity, color: "#00FF00"}
     ];
 
     for(var i=0;i<percentColorRanges.length;i++){
@@ -422,10 +434,25 @@ function PerfController($scope, $window, $http, $location){
   }
 }
 
+// Class to contain a collection of samples in a series.
 function TrendSamples(samples){
   this.samples = samples;
+
+  // _sampleByCommitIndexes is a map of mappings of (githash -> sample data), keyed by test name.
+  // e.g.
+  // { 
+  //   "test-foo":  {"ab215e..." : { sample data }, "bced3f..." : { sample data }, ...
+  //   "test-blah": {"ab215e..." : { sample data }, "bced3f..." : { sample data }, ...
+  //   ..
+  //}
   this._sampleByCommitIndexes = {};
+
+  // seriesByName is a mapping of test names to sample data.
   this.seriesByName = {};
+
+  this._tasksByName = {}
+
+  // testNames is a unique list of all the tests that appear in *any* of the given list of samples.
   this.testNames = [];
   for (var i = 0; i < samples.length; i++) {
     for (var j = 0; j < samples[i].data.results.length; j++) {
@@ -459,15 +486,28 @@ function TrendSamples(samples){
     }
   }
 
-  this.tasksByCommitOrder = function(testName){
+  // Returns a list of samples for a given test, sorted in the order that they were committed.
+  this.tasksByCommitOrder = function(){
     if(!this._tasks){
       this._tasks = _.sortBy(_.uniq(_.flatten(_.values(this.seriesByName)), false,  function(x){return x.task_id}), "order");
     }
     return this._tasks;
   }
 
+  this.tasksByCommitOrderByTestName = function(testName){
+     if(!(testName in this._tasksByName)){
+        this._tasksByName[testName] = _.sortBy(_.uniq(this.seriesByName[testName], function(x){return x.task_id}), "order") 
+     }
+     return this._tasksByName[testName]
+  }
+
   this.sampleInSeriesAtCommit = function(testName, revision){
     return this._sampleByCommitIndexes[testName][revision];
+  }
+
+  this.indexOfCommitInSeries = function(testName, revision){
+    var t = this.tasksByCommitOrderByTestName(testName)
+    return findIndex(t, function(x){x.revision==revision})
   }
 
   this.noiseAtCommit = function(testName, revision){
@@ -674,7 +714,7 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
           scope.$digest()
         }
       }(scope))
-      .on("mousemove", function(data, f, xscale, scope, series) {
+      .on("mousemove", function(data, f, xscale, scope, series, ts) {
         return function() {
           if(scope.locked){
             return;
@@ -687,14 +727,20 @@ var drawTrendGraph = function(trendSamples, tests, scope, taskId, compareSamples
           }
           for(var q=0;q<tests.length;q++){
             var d = scope.d3data[tests[q]]
-            d.focus.attr("cx", d.x(i)).attr("cy", d.y(trendSamples.sampleInSeriesAtCommit(tests[q], hash).ops_per_sec))
+            var index = findIndex(ts.tasksByCommitOrderByTestName(tests[q]), function(x){return x.revision==hash})
+            var tempSample = ts.sampleInSeriesAtCommit(tests[q], hash) 
+            if(index && tempSample){
+              d.focus.attr("cx", d.x(index)).attr("cy", d.y(tempSample.ops_per_sec))
+            }else{
+              d.focus.attr("cx", 0).attr("cy", 0)
+            }
           }
           scope.currentSample = data[i];
           scope.currentHash = data[i].revision;
           scope.currentHoverSeries = series;
           scope.$digest();
         }
-      }(series, focus, x, scope, key))
+      }(series, focus, x, scope, key, trendSamples))
 
     var avgOpsPerSec = d3.mean(ops)
     if (compareSamples) {
