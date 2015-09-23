@@ -136,6 +136,10 @@
       color:white;
       text-decoration:underline;
     }
+    .hover-compare-metrics {
+      white-space: nowrap;
+      font-size:.8em;
+    }
 
   </style>
   <div class="panel perf-panel" ng-if="conf.enabled && !!perfSample">
@@ -236,9 +240,8 @@
               <div ng-show="!comparePerfSample">
                 <button ng-click="addComparisonHash(hoverSamples[k].revision)">Compare</button>
               </div>
-              <div ng-show="!!comparePerfSample" ng-style="{backgroundColor:percentToColor(100*percentDiff(hoverSamples[k].ops_per_sec, comparePerfSample.maxThroughputForTest(k)))}"> [[Math.abs(100*percentDiff(hoverSamples[k].ops_per_sec, comparePerfSample.maxThroughputForTest(k))) | number:2]]% 
-                <span ng-show="hoverSamples[k].ops_per_sec > comparePerfSample.maxThroughputForTest(k)"> better than <span class="mono">[[comparePerfSample.sample.revision | limitTo:7]]</span></span> 
-                <span ng-show="hoverSamples[k].ops_per_sec <= comparePerfSample.maxThroughputForTest(k)"> worse than <span class="mono">[[comparePerfSample.sample.revision | limitTo:7]]</span></span> 
+              <div ng-repeat="compareSamp in comparePerfSamples" ng-show="hoverSamples">
+                <b class="hover-compare-metrics" ng-style="{backgroundColor:percentToColor(100*percentDiff(hoverSamples[k].ops_per_sec, compareSamp.maxThroughputForTest(k)))}">[[100*percentDiff(hoverSamples[k].ops_per_sec, compareSamp.maxThroughputForTest(k)) | number:1]]% vs [[compareSamp.getLegendName()]] </b>
               </div>
             </div>
           </div>
