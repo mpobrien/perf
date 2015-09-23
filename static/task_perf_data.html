@@ -129,6 +129,13 @@
     .compare-label {
       margin-right:10px;
     }
+    .compare-link{
+      color:white;
+    }
+    .compare-link:hover {
+      color:white;
+      text-decoration:underline;
+    }
 
   </style>
   <div class="panel perf-panel" ng-if="conf.enabled && !!perfSample">
@@ -147,7 +154,7 @@
     <div ng-show="comparePerfSamples.length > 0">
       <span>Comparing to:&nbsp;&nbsp;</span>
       <ul class="compare-list">
-        <li class="label label-primary compare-label" ng-repeat="item in comparePerfSamples"> <i class="icon-remove compare-remove" ng-click="removeCompareItem($index)"></i> [[item.getLegendName()]] </li>&nbsp;
+        <li class="label label-primary compare-label" ng-repeat="item in comparePerfSamples"> <i class="icon-remove compare-remove" ng-click="removeCompareItem($index)"></i> <a href="/task/[[item.sample.task_id]]" class="compare-link">[[item.getLegendName()]]</a> </li>&nbsp;
       </ul>
     </div>
     <a ng-click="showingCompareForm = true" href="" ng-show="!showingCompareForm">Add comparison...</a>
